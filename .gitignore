@@ -4,6 +4,7 @@
 *.env.*
 *.key
 *.pem
+.agents/
 
 # Python & Virtual Environments
 __pycache__/
@@ -15,7 +16,7 @@ env/
 venv/
 .venv/
 ENV/
-
+.agents
 # Databases & SQLite
 *.db
 *.sqlite
