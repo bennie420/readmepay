@@ -122,3 +122,19 @@ class SnippetResponse(BaseModel):
     rst: str
     badge_url: str | None = None
     click_url: str | None = None
+
+
+class ToggleClaimRequest(BaseModel):
+    repo_id: int | None = None
+    owner: str | None = None
+    name: str | None = None
+    claimed: bool
+
+
+class ClaimAllRequest(BaseModel):
+    payout_address: str | None = None
+
+
+class UpdatePayoutRequest(BaseModel):
+    payout_address: str
+

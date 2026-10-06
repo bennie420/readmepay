@@ -42,8 +42,8 @@ def create_app() -> FastAPI:
     openapi_url = "/openapi.json" if getattr(settings, "ENABLE_DOCS", False) else None
 
     app_instance = FastAPI(
-        title="Open-Source README Sponsorship Platform",
-        description="Dynamic SVG README badge ad engine with GitHub metadata and transparent analytics.",
+        title="ReadmePay: Economic Empowerment Infrastructure for Independent Open-Source Developers",
+        description="Dynamic SVG README badge ad engine delivering economic empowerment infrastructure for independent open-source developers through authentic GitHub metadata compilation and transparent 50/50 revenue sharing.",
         version="1.0.0",
         docs_url=docs_url,
         redoc_url=redoc_url,
@@ -100,6 +100,10 @@ def create_app() -> FastAPI:
     from app.routers.auth import router as auth_router
     app_instance.include_router(auth_router)
 
+    # Sponsor Brand Authentication & Campaign Management Router
+    from app.routers.sponsor_auth import router as sponsor_auth_router
+    app_instance.include_router(sponsor_auth_router)
+
     # 4. Core System Endpoints
     @app_instance.get("/health", tags=["System"])
     async def health_check():
@@ -129,6 +133,8 @@ def create_app() -> FastAPI:
     @app_instance.get("/app", include_in_schema=False)
     @app_instance.get("/dashboard", include_in_schema=False)
     @app_instance.get("/sponsor", include_in_schema=False)
+    @app_instance.get("/sponsors", include_in_schema=False)
+    @app_instance.get("/advertiser", include_in_schema=False)
     async def web_ui_dashboard():
         from fastapi.responses import HTMLResponse
         return HTMLResponse(content=get_ui_html())

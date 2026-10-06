@@ -1,19 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
-     width="440"
+     width="520"
      height="28"
-     viewBox="0 0 440 28"
+     viewBox="0 0 520 28"
      fill="none"
      role="img"
      aria-label="{{ repo_name }} sponsorship shield">
   <style>
     .base { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    .shield-tag { font-size: 10px; font-weight: 700; fill: #f0883e; letter-spacing: 0.5px; }
-    .shield-body { font-size: 11px; font-weight: 600; fill: #ffffff; }
-    .shield-headline { font-size: 10px; font-weight: 500; fill: #8b949e; }
-    .shield-cta { font-size: 10px; font-weight: 700; fill: #2ea043; letter-spacing: 0.2px; }
+    .shield-tag { font-size: 10px; font-weight: 800; fill: #f0883e; letter-spacing: 0.5px; }
+    .shield-body { font-size: 11px; font-weight: 700; fill: {{ palette.text_title | default('#ffffff') }}; }
+    .shield-headline { font-size: 10.5px; font-weight: 500; fill: {{ palette.text_meta | default('#c9d1d9') }}; }
+    .shield-cta { font-size: 10px; font-weight: 800; fill: #2ea043; letter-spacing: 0.3px; }
     a { cursor: pointer; text-decoration: none; }
-    a:hover .shield-bg-right { fill: #1c2128; }
+    a:hover .shield-bg-right { fill: #1f242c; }
     a:hover .shield-cta { fill: #3fb950; text-decoration: underline; }
 
     /* Animated pulse indicator for live sponsor */
@@ -22,52 +22,125 @@
       50% { r: 4.5; opacity: 0.4; }
       100% { r: 3; opacity: 1; }
     }
-    .pulse-glow { animation: pulse-dot 2.5s ease-in-out infinite; }
+    .pulse-glow { animation: pulse-dot 2.2s ease-in-out infinite; }
+
+    /* Smooth Right-to-Left Continuous Marquee Ticker */
+    @keyframes marquee-scroll {
+      0% { transform: translateX(290px); }
+      100% { transform: translateX(-400px); }
+    }
+    .marquee-track {
+      {% if marquee %}
+      animation: marquee-scroll 13s linear infinite;
+      {% endif %}
+    }
+    .marquee-track:hover {
+      animation-play-state: paused;
+    }
 
     @media (prefers-color-scheme: light) {
       .shield-bg-left { fill: #f6f8fa; stroke: #d0d7de; }
       .shield-bg-right { fill: #ffffff; }
       .shield-border { stroke: #d0d7de; }
-      .shield-body { fill: #24292f; }
+      .shield-body { fill: #0969da; }
       .shield-headline { fill: #57606a; }
       a:hover .shield-bg-right { fill: #f3f4f6; }
     }
   </style>
 
-  <!-- Left Side: ReadmePay / Sponsor Brand Pill -->
+  {% set is_sponsor_right = (sponsor_position == 'right') %}
+  {% set sponsor_display_name = (sponsor_name if (has_ad and sponsor_name) else 'SPONSOR') %}
+
+  <!-- Sponsor Shield: Follows chosen side (left or right) -->
   <g class="base">
     <a href="{{ click_url }}" xlink:href="{{ click_url }}" target="_blank" rel="noopener noreferrer">
       <!-- Shield Outer Boundary with Rounded Corners -->
       <clipPath id="shieldClip">
-        <rect x="0" y="0" width="440" height="28" rx="6"/>
+        <rect x="0" y="0" width="520" height="28" rx="6"/>
+      </clipPath>
+
+      {% if is_sponsor_right %}
+      <!-- Sponsor on the RIGHT side -->
+      <clipPath id="marqueeViewport">
+        <rect x="94" y="0" width="310" height="28"/>
       </clipPath>
 
       <g clip-path="url(#shieldClip)">
-        <!-- Left Banner: ReadmePay / Sponsor Tag -->
-        <rect class="shield-bg-left" x="0" y="0" width="88" height="28" fill="#161b22"/>
-        <!-- Animated pulsing green live dot -->
-        <circle class="pulse-glow" cx="12" cy="14" r="3" fill="#2ea043"/>
-        <text x="50" y="18" text-anchor="middle" class="shield-tag">SPONSOR</text>
+        <!-- Left Banner: Category / Action Tag -->
+        <rect class="shield-bg-left" x="0" y="0" width="88" height="28" fill="{{ palette.shield_left | default('#161b22') }}"/>
+        <text x="44" y="18" text-anchor="middle" class="shield-tag">&#x2665; SPONSOR</text>
 
-        <!-- Right Banner: Sponsor Name + Headline + CTA -->
-        <rect class="shield-bg-right" x="88" y="0" width="352" height="28" fill="#0d1117"/>
+        <!-- Center Background -->
+        <rect class="shield-bg-right" x="88" y="0" width="432" height="28" fill="{{ palette.shield_right | default('#0d1117') }}"/>
+
+        <!-- Middle Scrolling Content Area -->
+        <g clip-path="url(#marqueeViewport)">
+          <g class="marquee-track">
+            {% if has_ad %}
+            <text x="96" y="18">
+              <tspan class="shield-body">{{ sponsor_name }}</tspan>
+              <tspan class="shield-headline" dx="8">&#x2014; {{ headline }}</tspan>
+              <tspan class="shield-cta" dx="10">[{{ cta_text }} &#x2192;]</tspan>
+            </text>
+            {% else %}
+            <text x="96" y="18">
+              <tspan class="shield-headline">Support {{ repo_name }} &#x2014; Reach thousands of active developers directly in README</tspan>
+            </text>
+            {% endif %}
+          </g>
+        </g>
+
+        <!-- Right End Anchor: Sponsor Name Pill -->
+        <rect x="408" y="3" width="108" height="22" rx="4" fill="{{ palette.btn_bg_0 | default('#238636') }}"/>
+        <!-- Pulse dot inside sponsor pill -->
+        <circle class="pulse-glow" cx="418" cy="14" r="3" fill="#ffffff"/>
+        <text x="466" y="18" text-anchor="middle" font-size="10" font-weight="800" fill="#ffffff">{{ sponsor_display_name | truncate_text(13) }}</text>
+      </g>
+      {% else %}
+      <!-- Sponsor on the LEFT side (Default) -->
+      <clipPath id="marqueeViewport">
+        <rect x="114" y="0" width="300" height="28"/>
+      </clipPath>
+
+      <g clip-path="url(#shieldClip)">
+        <!-- Left Banner: Sponsor Brand Pill with live pulse -->
+        <rect class="shield-bg-left" x="0" y="0" width="108" height="28" fill="{{ palette.shield_left | default('#161b22') }}"/>
+        <circle class="pulse-glow" cx="12" cy="14" r="3" fill="#2ea043"/>
+        <text x="58" y="18" text-anchor="middle" class="shield-tag">{{ sponsor_display_name | truncate_text(12) }}</text>
+
+        <!-- Right Background -->
+        <rect class="shield-bg-right" x="108" y="0" width="412" height="28" fill="{{ palette.shield_right | default('#0d1117') }}"/>
+
+        <!-- Middle Scrolling Content Area -->
+        <g clip-path="url(#marqueeViewport)">
+          <g class="marquee-track">
+            {% if has_ad %}
+            <text x="116" y="18">
+              <tspan class="shield-body">{{ sponsor_name }}</tspan>
+              <tspan class="shield-headline" dx="8">&#x2014; {{ headline }}</tspan>
+              <tspan class="shield-cta" dx="10">[{{ cta_text }} &#x2192;]</tspan>
+            </text>
+            {% else %}
+            <text x="116" y="18">
+              <tspan class="shield-body">Sponsor {{ repo_name }}</tspan>
+              <tspan class="shield-headline" dx="8">&#x2014; Reach thousands of active developers directly in README</tspan>
+            </text>
+            {% endif %}
+          </g>
+        </g>
+
+        <!-- Right End Anchor: Static Call-to-Action Pill -->
+        <rect x="420" y="4" width="94" height="20" rx="4" fill="{{ palette.btn_bg_0 | default('#238636') }}"/>
         {% if has_ad %}
-        <text x="100" y="18">
-          <tspan class="shield-body">{{ sponsor_name | truncate_text(16) }}</tspan>
-          <tspan class="shield-headline" dx="6">{{ headline | truncate_text(26) }}</tspan>
-        </text>
-        <text x="428" y="18" text-anchor="end" class="shield-cta">{{ cta_text | truncate_text(12) }} &#x2192;</text>
+        <text x="467" y="18" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">{{ cta_text | truncate_text(11) }} &#x2192;</text>
         {% else %}
-        <text x="100" y="18">
-          <tspan class="shield-body">Sponsor {{ repo_name | truncate_text(16) }}</tspan>
-          <tspan class="shield-headline" dx="6">Reach active software developers</tspan>
-        </text>
-        <text x="428" y="18" text-anchor="end" class="shield-cta">&#x2665; Join &#x2192;</text>
+        <text x="467" y="18" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">&#x2665; Sponsor &#x2192;</text>
         {% endif %}
       </g>
+      {% endif %}
 
       <!-- Border Stroke -->
-      <rect class="shield-border" x="0.5" y="0.5" width="439" height="27" rx="5.5" fill="none" stroke="#30363d" stroke-width="1"/>
+      <rect class="shield-border" x="0.5" y="0.5" width="519" height="27" rx="5.5" fill="none" stroke="{{ palette.shield_border | default('#30363d') }}" stroke-width="1"/>
     </a>
   </g>
 </svg>

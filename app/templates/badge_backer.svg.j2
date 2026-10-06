@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="320"
+     height="28"
+     viewBox="0 0 320 28"
+     fill="none"
+     role="img"
+     aria-label="{{ repo_name }} official sponsor badge">
+  <style>
+    .f-sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .backer-tag { font-size: 10px; font-weight: 800; fill: {{ palette.accent | default('#f0883e') }}; letter-spacing: 0.5px; }
+    .sponsor-title { font-size: 11px; font-weight: 800; fill: #ffffff; letter-spacing: 0.2px; }
+    .sponsor-cta { font-size: 9.5px; font-weight: 700; fill: {{ palette.accent | default('#38bdf8') }}; }
+    a { cursor: pointer; text-decoration: none; }
+    a:hover .backer-right-bg { fill-opacity: 0.9; }
+
+    @keyframes pulse-backer {
+      0% { r: 3px; opacity: 1; }
+      50% { r: 4.5px; opacity: 0.45; }
+      100% { r: 3px; opacity: 1; }
+    }
+    .pulse-dot { animation: pulse-backer 2s ease-in-out infinite; }
+
+    {% if marquee %}
+    @keyframes backer-marquee-scroll {
+      0% { transform: translateX(80px); }
+      100% { transform: translateX(-140px); }
+    }
+    .backer-marquee-track {
+      animation: backer-marquee-scroll 8s linear infinite;
+    }
+    .backer-marquee-track:hover {
+      animation-play-state: paused;
+    }
+    {% endif %}
+
+    @media (prefers-color-scheme: light) {
+      .backer-left-bg { fill: #f6f8fa !important; }
+      .backer-right-bg { fill: #ffffff !important; }
+      .backer-border { stroke: #d0d7de !important; }
+      .sponsor-title { fill: #1f2328 !important; }
+    }
+  </style>
+
+  {% set sponsor_text = (sponsor_name if (has_ad and sponsor_name) else 'ReadmePay') %}
+
+  <a href="{{ click_url }}" xlink:href="{{ click_url }}" target="_blank" rel="noopener noreferrer">
+    <clipPath id="backerClip">
+      <rect x="0" y="0" width="320" height="28" rx="6"/>
+    </clipPath>
+
+    <g clip-path="url(#backerClip)" class="f-sans">
+      <!-- Left Label: Support / Backer Tag -->
+      <rect class="backer-left-bg" x="0" y="0" width="124" height="28" fill="{{ palette.card_bg_0 | default('#161b22') }}"/>
+      <text x="62" y="18" text-anchor="middle" class="backer-tag">
+        &#x2665; SUPPORTED BY
+      </text>
+
+      <!-- Right Label: Sponsor Identity -->
+      <rect class="backer-right-bg" x="124" y="0" width="196" height="28" fill="{{ palette.card_bg_1 | default('#0d1117') }}"/>
+
+      {% if has_ad %}
+      <clipPath id="backerTextClip">
+        <rect x="132" y="0" width="180" height="28"/>
+      </clipPath>
+
+      <g clip-path="url(#backerTextClip)">
+        <g class="{% if marquee %}backer-marquee-track{% endif %}">
+          <!-- Live Beacon Indicator -->
+          <circle class="pulse-dot" cx="138" cy="14" r="3" fill="{{ palette.accent | default('#3fb950') }}"/>
+          <text x="148" y="18" class="sponsor-title">{{ sponsor_text | truncate_text(16) }}</text>
+          <text x="{% if sponsor_text %}{{ 152 + (sponsor_text | length) * 7.2 }}{% else %}210{% endif %}" y="18" class="sponsor-cta">&#x2192;</text>
+        </g>
+      </g>
+      {% else %}
+      <!-- Unsold / Open Backer Slot CTA -->
+      <text x="222" y="18" text-anchor="middle" class="sponsor-cta">
+        Become a Backer &#x2192;
+      </text>
+      {% endif %}
+
+      <!-- Border outline -->
+      <rect class="backer-border" x="0.5" y="0.5" width="319" height="27" rx="5.5" fill="none" stroke="{{ palette.border | default('#30363d') }}" stroke-width="1"/>
+    </g>
+  </a>
+</svg>

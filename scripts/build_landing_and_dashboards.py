@@ -1,4 +1,14 @@
-<!DOCTYPE html>
+"""
+Script to build the updated index.html with:
+1. True SaaS Landing Page on tab-home (Hero, sells copy, mission statement, 2-sided marketplace, full Badge Styles & Options Gallery, 9 themes swatches, cheatsheet).
+2. Badge Studio & Snippet Generator locked behind repo owner login in tab-revenue (Maintainer Dashboard).
+3. First-class Sponsor Dashboard & Visual Login on tab-sponsors (Sponsor sign-in, brand selector, live ad preview, campaign management, deposits).
+"""
+
+import sys
+from pathlib import Path
+
+content = r'''<!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
@@ -2378,3 +2388,8 @@
   </script>
 </body>
 </html>
+'''
+
+target_path = Path("app/templates/index.html")
+target_path.write_text(content, encoding="utf-8")
+print(f"Successfully generated {target_path} ({len(content)} bytes)")

@@ -115,6 +115,11 @@ def get_ads_inventory(
 
     items = []
     for a in ads:
+        clicks_cnt = len(a.clicks) if hasattr(a, "clicks") and a.clicks else 0
+        impr_cnt = len(a.impressions) if hasattr(a, "impressions") and a.impressions else 0
+        total_b = float(a.total_budget) if getattr(a, "total_budget", None) is not None else float(a.remaining_budget)
+        rem_b = float(a.remaining_budget)
+        spent = max(0.0, total_b - rem_b)
         items.append({
             "id": a.id,
             "sponsor_name": a.sponsor_name,
@@ -122,9 +127,14 @@ def get_ads_inventory(
             "cta_text": a.cta_text,
             "click_url": a.click_url,
             "target_language": a.target_language or "general",
+            "target_repo_id": a.target_repo_id,
             "cpc": float(a.cpc),
-            "remaining_budget": float(a.remaining_budget),
-            "total_budget": float(a.total_budget) if getattr(a, "total_budget", None) is not None else float(a.remaining_budget),
+            "remaining_budget": rem_b,
+            "total_budget": total_b,
+            "spent": round(spent, 2),
+            "clicks_count": clicks_cnt,
+            "impressions_count": impr_cnt,
+            "ctr": round((clicks_cnt / impr_cnt * 100), 1) if impr_cnt > 0 else 0.0,
             "is_active": a.is_active,
         })
 
@@ -149,6 +159,7 @@ class CreateCampaignRequest(BaseModel):
 @router.post("/inventory/ads", summary="Create a new sponsor ad campaign")
 def create_sponsor_campaign(
     payload: CreateCampaignRequest,
+    response: Response,
     db: Session = Depends(get_db),
 ):
     """Register a new sponsor ad campaign ready to receive funds via PayPal or Crypto."""
@@ -182,6 +193,14 @@ def create_sponsor_campaign(
     db.add(new_ad)
     db.commit()
     db.refresh(new_ad)
+
+    response.set_cookie(
+        key="readmepay_sponsor",
+        value=new_ad.sponsor_name,
+        httponly=False,
+        max_age=86400 * 30,
+        samesite="lax",
+    )
 
     return {
         "message": f"Campaign '{new_ad.sponsor_name}' created successfully. Proceed to checkout to fund your impression budget.",

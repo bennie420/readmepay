@@ -75,6 +75,11 @@ async def get_badge_svg(
     request: Request,
     background_tasks: BackgroundTasks,
     style: str = "banner",
+    theme: str = "dark",
+    marquee: bool | None = None,
+    sponsor_pos: str = "right",
+    hide_stars: bool = False,
+    hide_ci: bool = False,
     if_none_match: str | None = Header(None, alias="if-none-match"),
     db: Session = Depends(get_db),
 ):
@@ -138,8 +143,8 @@ async def get_badge_svg(
     if matched_ad is not None and getattr(matched_ad, "id", None) and matched_ad.id > 0:
         click_url = f"/click/{matched_ad.id}/{repository.id}"
     else:
-        # High-leverage dynamic conversion: route direct to instant repository sponsorship checkout
-        click_url = f"/sponsor?repo={repository.owner}/{repository.name}"
+        # High-leverage dynamic conversion: route direct to maintainer claim / community onboarding
+        click_url = f"/maintainers/claim?repo={repository.owner}/{repository.name}"
 
     # 5. Non-blocking impression tracking via BackgroundTasks
     if matched_ad is not None and getattr(matched_ad, "id", None) and matched_ad.id > 0:
@@ -154,7 +159,8 @@ async def get_badge_svg(
             is_camo=client_info.is_camo,
         )
 
-    # 6. Render dynamic badge SVG
+    # 6. Render dynamic badge SVG with user-selected themes, styles, and marquee options
+    effective_marquee = (style.lower() == "shield") if marquee is None else marquee
     svg_content = build_badge_svg(
         repo_name=repository.name,
         stars=repository.stars,
@@ -164,6 +170,11 @@ async def get_badge_svg(
         click_url=click_url,
         owner=repository.owner,
         style=style,
+        theme=theme,
+        marquee=effective_marquee,
+        sponsor_position=sponsor_pos,
+        hide_stars=hide_stars,
+        hide_ci=hide_ci,
     )
 
     # 7. ETag generation and HTTP 304 negotiation
