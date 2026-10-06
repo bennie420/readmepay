@@ -140,6 +140,8 @@ class CreateCampaignRequest(BaseModel):
     call_to_action: str = Field(default="Learn More", max_length=100, description="Button CTA (e.g. Try Free, Start Trial)")
     click_url: str = Field(..., min_length=10, max_length=1024, description="Destination landing page URL")
     target_language: str = Field(default="General", description="Programming language to target (Python, Rust, TypeScript, General)")
+    target_repo_id: Optional[int] = Field(default=None, description="Optional target repository ID to sponsor exclusively")
+    target_repo_name: Optional[str] = Field(default=None, description="Optional owner/repo string (e.g. 'tiangolo/fastapi')")
     initial_budget: Decimal = Field(default=Decimal("50.00"), ge=Decimal("5.00"), description="Initial deposit budget in USD")
     cost_per_click: Decimal = Field(default=Decimal("0.50"), ge=Decimal("0.10"), description="Bid per verified click in USD")
 
@@ -154,12 +156,23 @@ def create_sponsor_campaign(
     if lang.lower() in ("all", "general", "any"):
         lang = "General"
 
+    repo_id_val = payload.target_repo_id
+    if repo_id_val is None and payload.target_repo_name and "/" in payload.target_repo_name:
+        parts = payload.target_repo_name.strip().split("/", 1)
+        r_record = db.query(Repository).filter(
+            func.lower(Repository.owner) == parts[0].strip().lower(),
+            func.lower(Repository.name) == parts[1].strip().lower(),
+        ).first()
+        if r_record:
+            repo_id_val = r_record.id
+
     new_ad = Ad(
         sponsor_name=payload.sponsor_name.strip(),
         headline=payload.headline.strip(),
         call_to_action=payload.call_to_action.strip(),
         click_url=payload.click_url.strip(),
         target_language=lang,
+        target_repo_id=repo_id_val,
         total_budget=payload.initial_budget,
         remaining_budget=Decimal("0.00"),  # Funded upon checkout completion
         cost_per_click=payload.cost_per_click,
@@ -176,6 +189,7 @@ def create_sponsor_campaign(
         "sponsor_name": new_ad.sponsor_name,
         "headline": new_ad.headline,
         "target_language": new_ad.target_language,
+        "target_repo_id": new_ad.target_repo_id,
         "initial_budget": float(payload.initial_budget),
     }
 

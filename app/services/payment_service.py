@@ -121,7 +121,20 @@ async def create_paypal_order(
         if response.status_code not in (200, 201):
             logger.error("Failed to create PayPal order: %s - %s", response.status_code, response.text)
             raise RuntimeError(f"PayPal order creation failed: {response.text}")
-        return response.json()
+        data = response.json()
+        
+        # Extract approval URL from PayPal HATEOAS links
+        approve_url = None
+        for link in data.get("links", []):
+            if link.get("rel") in ("approve", "approval_url", "payer-action"):
+                approve_url = link.get("href")
+                break
+        
+        if approve_url:
+            data["approve_url"] = approve_url
+            data["approval_url"] = approve_url
+
+        return data
 
 
 async def capture_paypal_order(order_id: str, db: Session) -> dict[str, Any]:

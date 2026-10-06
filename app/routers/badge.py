@@ -126,11 +126,12 @@ async def get_badge_svg(
             },
         )
 
-    # 3. Sponsor campaign matching (Tier 1 language -> Tier 2 general)
+    # 3. Sponsor campaign matching (Tier 0 direct repo -> Tier 1 language -> Tier 2 general)
     matched_ad = match_ad_for_repository(
         db,
         repository.primary_language,
         allow_platform_invite=False,
+        repo_id=repository.id,
     )
 
     # 4. Construct click redirect hyperlink
@@ -218,6 +219,7 @@ async def get_shield_json(
         db,
         repository.primary_language,
         allow_platform_invite=False,
+        repo_id=repository.id,
     )
 
     if matched_ad is not None and getattr(matched_ad, "id", None) and matched_ad.id > 0:

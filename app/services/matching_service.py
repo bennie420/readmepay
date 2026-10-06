@@ -43,11 +43,13 @@ def match_ad_for_repository(
     db: Session,
     primary_language: str | None = None,
     allow_platform_invite: bool = True,
+    repo_id: int | None = None,
 ) -> Ad | None:
     """
     Resolve the highest-priority active ad campaign for a given repository.
 
     Match Cascade:
+      Tier 0: Dedicated repository-specific ad sponsorship (target_repo_id == repo_id).
       Tier 1: Case-insensitive language match with remaining_budget > 0.
       Tier 2: Universal general fallback (target_language IS NULL or 'general') with remaining_budget > 0.
       Tier 3: Platform open onboarding invite (zero fake commercial sponsors).
@@ -56,11 +58,12 @@ def match_ad_for_repository(
         db: SQLAlchemy synchronous Session.
         primary_language: Repository's primary programming language (e.g. 'Python', 'Rust').
         allow_platform_invite: Whether to return Tier 3 platform invite when no commercial ad exists.
+        repo_id: Optional database repository ID for dedicated direct repository sponsorship.
 
     Returns:
         Matched Ad instance, or None if no ad and platform invite disabled.
     """
-    ad, _ = match_ad_cascade(db, primary_language, allow_platform_invite=allow_platform_invite)
+    ad, _ = match_ad_cascade(db, primary_language, allow_platform_invite=allow_platform_invite, repo_id=repo_id)
     return ad
 
 
@@ -68,16 +71,33 @@ def match_ad_cascade(
     db: Session,
     primary_language: str | None = None,
     allow_platform_invite: bool = True,
+    repo_id: int | None = None,
 ) -> tuple[Ad | None, int]:
     """
     Resolve ad and return tuple of (ad_instance, match_tier).
 
     Returns:
+        (Ad, 0) for Dedicated Repository match
         (Ad, 1) for Language match
         (Ad, 2) for General fallback
         (Ad, 3) for Platform onboarding invite
         (None, 0) if no match and platform invite disabled
     """
+    # Tier 0: Direct repository-specific targeted sponsor (Highest priority)
+    if repo_id is not None and repo_id > 0:
+        stmt_t0 = (
+            select(Ad)
+            .where(
+                Ad.is_active == True,
+                Ad.remaining_budget > Decimal("0.00"),
+                Ad.target_repo_id == repo_id,
+            )
+            .order_by(Ad.cost_per_click.desc(), Ad.id.asc())
+        )
+        t0_ad = db.scalars(stmt_t0).first()
+        if t0_ad is not None:
+            return t0_ad, 0
+
     # Clean language input: strip whitespace
     clean_lang = primary_language.strip().lower() if primary_language and primary_language.strip() else None
 
@@ -88,9 +108,10 @@ def match_ad_cascade(
             .where(
                 Ad.is_active == True,
                 Ad.remaining_budget > Decimal("0.00"),
+                Ad.target_repo_id.is_(None),
                 func.lower(Ad.target_language) == clean_lang,
             )
-            .order_by(Ad.id.asc())
+            .order_by(Ad.cost_per_click.desc(), Ad.id.asc())
         )
         t1_ad = db.scalars(stmt_t1).first()
         if t1_ad is not None:
@@ -102,12 +123,13 @@ def match_ad_cascade(
         .where(
             Ad.is_active == True,
             Ad.remaining_budget > Decimal("0.00"),
+            Ad.target_repo_id.is_(None),
             or_(
                 Ad.target_language.is_(None),
                 func.lower(Ad.target_language) == "general",
             ),
         )
-        .order_by(Ad.id.asc())
+        .order_by(Ad.cost_per_click.desc(), Ad.id.asc())
     )
     t2_ad = db.scalars(stmt_t2).first()
     if t2_ad is not None:

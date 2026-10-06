@@ -78,3 +78,24 @@ def test_repository_preview_endpoint(client: TestClient, db_session: Session):
     assert "snippets" in data
     assert "badge_url" in data
     assert "click_url" in data
+
+
+def test_create_sponsor_campaign_with_target_repo(client: TestClient, db_session: Session):
+    """Verify POST /api/inventory/ads binds campaign to target_repo_name."""
+    repo = create_test_repository(db_session, owner="targetorg", name="targetpkg")
+    payload = {
+        "sponsor_name": "ExclusiveRepoSponsor",
+        "headline": "Specialized Tool for targetpkg",
+        "call_to_action": "Try Free",
+        "click_url": "https://exclusive-sponsor.com/ref",
+        "target_language": "Python",
+        "target_repo_name": f"{repo.owner}/{repo.name}",
+        "initial_budget": 100.0,
+        "cost_per_click": 1.50
+    }
+    resp = client.post("/api/inventory/ads", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["target_repo_id"] == repo.id
+    assert data["sponsor_name"] == "ExclusiveRepoSponsor"
+

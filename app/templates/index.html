@@ -517,10 +517,6 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block font-semibold text-gray-300 mb-1">Call to Action <span class="text-rose-400">*</span></label>
-              <input type="text" id="ad-cta" required placeholder="e.g. Start Free, Try Now" value="Learn More" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-500">
-            </div>
-            <div>
               <label class="block font-semibold text-gray-300 mb-1">Target Language <span class="text-rose-400">*</span></label>
               <select id="ad-target-lang" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
                 <option value="General">All Languages (General Fallback)</option>
@@ -532,11 +528,21 @@
                 <option value="C++">C / C++</option>
               </select>
             </div>
+            <div>
+              <label class="block font-semibold text-gray-300 mb-1">Dedicated Target Repo (Optional)</label>
+              <input type="text" id="ad-target-repo" placeholder="e.g. tiangolo/fastapi or leave blank" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-500">
+            </div>
           </div>
 
-          <div>
-            <label class="block font-semibold text-gray-300 mb-1">Destination URL (Tracking redirect destination) <span class="text-rose-400">*</span></label>
-            <input type="url" id="ad-click-url" required placeholder="https://yourproduct.com/?ref=readmepay" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-500">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-semibold text-gray-300 mb-1">Call to Action <span class="text-rose-400">*</span></label>
+              <input type="text" id="ad-cta" required placeholder="e.g. Start Free, Try Now" value="Learn More" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+              <label class="block font-semibold text-gray-300 mb-1">Destination URL <span class="text-rose-400">*</span></label>
+              <input type="url" id="ad-click-url" required placeholder="https://yourproduct.com/?ref=readmepay" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-500">
+            </div>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-gray-800">
@@ -991,6 +997,7 @@
       const clickUrl = document.getElementById('ad-click-url').value.trim();
       const budget = parseFloat(document.getElementById('ad-budget').value);
       const cpc = parseFloat(document.getElementById('ad-cpc').value);
+      const targetRepo = document.getElementById('ad-target-repo')?.value.trim() || null;
       const paymentMethod = document.querySelector('input[name="payment_method"]:checked')?.value || 'paypal';
 
       const btn = document.getElementById('btn-create-campaign');
@@ -1011,6 +1018,7 @@
             headline: headline,
             call_to_action: cta,
             target_language: lang,
+            target_repo_name: targetRepo,
             click_url: clickUrl,
             initial_budget: budget,
             cost_per_click: cpc
@@ -1045,10 +1053,14 @@
           }
 
           const orderData = await resOrder.json();
-          if (orderData.approve_url) {
-            window.location.href = orderData.approve_url;
+          const approveLink = orderData.approve_url || orderData.approval_url || 
+            (orderData.links && orderData.links.find(l => l.rel === 'approve' || l.rel === 'approval_url')?.href);
+
+          if (approveLink) {
+            window.location.href = approveLink;
             return;
           } else {
+            console.error("PayPal response payload:", orderData);
             throw new Error("Missing approval URL from PayPal.");
           }
         } else if (paymentMethod === 'crypto') {
@@ -1197,10 +1209,15 @@
         document.getElementById('input-repo').value = repo;
         document.getElementById('claim-owner').value = owner;
         document.getElementById('claim-name').value = repo;
+        const targetRepoInput = document.getElementById('ad-target-repo');
+        if (targetRepoInput) targetRepoInput.value = `${owner}/${repo}`;
       } else if (claim && claim.includes('/')) {
         const parts = claim.split('/');
         document.getElementById('claim-owner').value = parts[0];
         document.getElementById('claim-name').value = parts[1];
+      } else if (params.get('repo') && params.get('repo').includes('/')) {
+        const targetRepoInput = document.getElementById('ad-target-repo');
+        if (targetRepoInput) targetRepoInput.value = params.get('repo');
       }
 
       if (tab) {
@@ -1209,6 +1226,9 @@
         switchTab('maintainer');
       } else if (window.location.pathname.includes('/sponsor') || params.get('sponsor')) {
         switchTab('sponsors');
+        if (params.get('repo') || (owner && repo)) {
+          openCreateCampaignModal();
+        }
       } else {
         switchTab('studio');
       }
