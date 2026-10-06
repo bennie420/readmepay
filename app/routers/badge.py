@@ -137,7 +137,8 @@ async def get_badge_svg(
     if matched_ad is not None and getattr(matched_ad, "id", None) and matched_ad.id > 0:
         click_url = f"/click/{matched_ad.id}/{repository.id}"
     else:
-        click_url = f"/maintainers/claim?repo={repository.owner}/{repository.name}"
+        # High-leverage dynamic conversion: route direct to instant repository sponsorship checkout
+        click_url = f"/sponsor?repo={repository.owner}/{repository.name}"
 
     # 5. Non-blocking impression tracking via BackgroundTasks
     if matched_ad is not None and getattr(matched_ad, "id", None) and matched_ad.id > 0:
@@ -186,3 +187,54 @@ async def get_badge_svg(
             "ETag": etag,
         },
     )
+
+
+@router.get("/badge/{owner}/{repo}/shield.json")
+@router.get("/api/badge/{owner}/{repo}/shield.json")
+async def get_shield_json(
+    owner: str,
+    repo: str,
+    db: Session = Depends(get_db),
+):
+    """
+    Shields.io Dynamic Endpoint v1 JSON contract.
+    Enables maintainers to embed:
+    https://img.shields.io/endpoint?url=https://readmepay.com/badge/{owner}/{repo}/shield.json
+    """
+    decoded_owner = urllib.parse.unquote(owner).strip()
+    decoded_repo = urllib.parse.unquote(repo).strip()
+
+    repository = await get_or_fetch_repository(db, decoded_owner, decoded_repo)
+    if repository is None:
+        return {
+            "schemaVersion": 1,
+            "isError": True,
+            "label": "sponsor",
+            "message": "repo not found",
+            "color": "inactive",
+        }
+
+    matched_ad = match_ad_for_repository(
+        db,
+        repository.primary_language,
+        allow_platform_invite=False,
+    )
+
+    if matched_ad is not None and getattr(matched_ad, "id", None) and matched_ad.id > 0:
+        message_text = f"{matched_ad.sponsor_name} ⚡"
+        badge_color = "brightgreen"
+        click_link = f"https://readmepay.com/click/{matched_ad.id}/{repository.id}"
+    else:
+        message_text = "sponsor available"
+        badge_color = "blue"
+        click_link = f"https://readmepay.com/sponsor?repo={repository.owner}/{repository.name}"
+
+    return {
+        "schemaVersion": 1,
+        "label": "sponsor",
+        "message": message_text,
+        "color": badge_color,
+        "style": "flat",
+        "link": [click_link, click_link],
+    }
+

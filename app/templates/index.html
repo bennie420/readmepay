@@ -1207,6 +1207,8 @@
         switchTab(tab);
       } else if (claim) {
         switchTab('maintainer');
+      } else if (window.location.pathname.includes('/sponsor') || params.get('sponsor')) {
+        switchTab('sponsors');
       } else {
         switchTab('studio');
       }

@@ -170,3 +170,32 @@ def test_badge_shield_style(client: TestClient, db_session: Session):
     assert "SPONSOR" in svg
     assert ad.sponsor_name in svg
 
+
+def test_badge_shields_io_dynamic_endpoint(client: TestClient, db_session: Session):
+    """Shields.io JSON endpoint returns valid SchemaVersion 1 endpoint contract."""
+    repo = create_test_repository(db_session, owner="pallets", name="click", primary_language="Python")
+    ad = create_test_ad(db_session, target_language="Python", sponsor_name="DatabaseCorp")
+
+    # 1. With active matched sponsor
+    resp = client.get(f"/badge/{repo.owner}/{repo.name}/shield.json")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["schemaVersion"] == 1
+    assert data["label"] == "sponsor"
+    assert "DatabaseCorp" in data["message"]
+    assert data["color"] == "brightgreen"
+    assert len(data["link"]) == 2
+    assert f"/click/{ad.id}/{repo.id}" in data["link"][0]
+
+    # 2. Unsold repository returns 'sponsor available' and direct /sponsor?repo= link
+    unsold_repo = create_test_repository(db_session, owner="unsold", name="pkg", primary_language="Haskell")
+    resp_unsold = client.get(f"/badge/{unsold_repo.owner}/{unsold_repo.name}/shield.json")
+    assert resp_unsold.status_code == 200
+    unsold_data = resp_unsold.json()
+    assert unsold_data["schemaVersion"] == 1
+    assert unsold_data["label"] == "sponsor"
+    assert unsold_data["message"] == "sponsor available"
+    assert unsold_data["color"] == "blue"
+    assert f"/sponsor?repo={unsold_repo.owner}/{unsold_repo.name}" in unsold_data["link"][0]
+
+
