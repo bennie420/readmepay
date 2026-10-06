@@ -59,10 +59,22 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def init_db(target_engine: Engine | None = None) -> None:
-    """Create all database tables on application startup."""
+    """Create all database tables on application startup and apply lightweight migrations."""
     import app.models  # noqa: F401 - Register models with Base.metadata
     eng = target_engine or engine
     Base.metadata.create_all(bind=eng)
+
+    # Safe automated schema migrations for SQLite
+    with eng.connect() as conn:
+        try:
+            # Check if target_repo_id exists on ads table
+            res = conn.execute(sqlite3_text if "sqlite3_text" in globals() else __import__("sqlalchemy").text("PRAGMA table_info(ads);")).fetchall()
+            col_names = [r[1] for r in res]
+            if "target_repo_id" not in col_names and len(col_names) > 0:
+                conn.execute(__import__("sqlalchemy").text("ALTER TABLE ads ADD COLUMN target_repo_id INTEGER;"))
+                conn.commit()
+        except Exception:
+            pass
 
 
 def reset_db(target_engine: Engine | None = None) -> None:

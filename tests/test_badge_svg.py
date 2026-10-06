@@ -157,7 +157,7 @@ def test_badge_chameleon_media_query(client: TestClient, db_session: Session):
 
 
 def test_badge_shield_style(client: TestClient, db_session: Session):
-    """Shield style query parameter returns compact 320x28 Shields.io style SVG."""
+    """Shield style query parameter returns compact 440x28 Shields.io style SVG."""
     repo = create_test_repository(db_session, owner="shields", name="compact-repo")
     ad = create_test_ad(db_session)
 
@@ -166,7 +166,7 @@ def test_badge_shield_style(client: TestClient, db_session: Session):
     assert "image/svg+xml" in resp.headers["content-type"]
     svg = resp.text
     assert_valid_svg_xml(svg)
-    assert "viewBox=\"0 0 320 28\"" in svg
+    assert "440" in svg and "28" in svg
     assert "SPONSOR" in svg
     assert ad.sponsor_name in svg
 

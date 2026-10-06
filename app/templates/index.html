@@ -280,6 +280,7 @@
             <div class="flex items-center space-x-2">
               <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Embed Snippets:</span>
               <button onclick="setSnippetTab('markdown')" id="btn-snip-markdown" class="snip-tab-btn px-2.5 py-1 text-xs rounded-md font-medium text-brand-300 bg-brand-500/10 border border-brand-500/30">Markdown</button>
+              <button onclick="setSnippetTab('shieldsio')" id="btn-snip-shieldsio" class="snip-tab-btn px-2.5 py-1 text-xs rounded-md font-medium text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 border border-emerald-500/30">Shields.io</button>
               <button onclick="setSnippetTab('html')" id="btn-snip-html" class="snip-tab-btn px-2.5 py-1 text-xs rounded-md font-medium text-gray-400 hover:text-gray-200">HTML</button>
               <button onclick="setSnippetTab('rst')" id="btn-snip-rst" class="snip-tab-btn px-2.5 py-1 text-xs rounded-md font-medium text-gray-400 hover:text-gray-200">RST</button>
               <button onclick="setSnippetTab('urls')" id="btn-snip-urls" class="snip-tab-btn px-2.5 py-1 text-xs rounded-md font-medium text-gray-400 hover:text-gray-200">Direct URLs</button>
@@ -866,17 +867,20 @@
         : `${base}/maintainers/claim?repo=${currentOwner}/${currentRepo}`;
 
       const markdown = `[![Sponsorship Badge](${badgeUrl})](${clickUrl})`;
+      const shieldsIo = `[![Sponsor](https://img.shields.io/endpoint?url=${base}/badge/${currentOwner}/${currentRepo}/shield.json)](${clickUrl})`;
       const html = `<a href="${clickUrl}"><img src="${badgeUrl}" alt="Sponsorship Badge" /></a>`;
       const rst = `.. image:: ${badgeUrl}\n   :target: ${clickUrl}\n   :alt: Sponsorship Badge`;
 
       if (currentSnippetFormat === 'markdown') {
         box.value = markdown;
+      } else if (currentSnippetFormat === 'shieldsio') {
+        box.value = shieldsIo;
       } else if (currentSnippetFormat === 'html') {
         box.value = html;
       } else if (currentSnippetFormat === 'rst') {
         box.value = rst;
       } else if (currentSnippetFormat === 'urls') {
-        box.value = `Badge SVG: ${badgeUrl}\nClick Redirect: ${clickUrl}`;
+        box.value = `Badge SVG: ${badgeUrl}\nShields.io JSON: ${base}/badge/${currentOwner}/${currentRepo}/shield.json\nClick Redirect: ${clickUrl}`;
       }
     }
 

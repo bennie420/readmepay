@@ -12,15 +12,31 @@
     .meta-text { font-size: 12px; font-weight: 500; fill: #e6edf3; }
     .lang-text { font-size: 11px; font-weight: 500; fill: #c9d1d9; }
     .ci-text { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-    .ad-card { cursor: pointer; transition: all 0.2s ease; }
+    .ad-card { cursor: pointer; transition: all 0.25s ease-in-out; }
     .ad-card:hover { stroke: #58a6ff; }
     .ad-tag { font-size: 9px; font-weight: 700; fill: #f0883e; letter-spacing: 0.5px; }
     .sponsor-name { font-size: 11px; font-weight: 600; fill: #8b949e; }
-    .ad-headline { font-size: 11px; font-weight: 600; fill: #f0f6fc; }
-    .cta-text { font-size: 10px; font-weight: 600; fill: #ffffff; }
+    .ad-headline { font-size: 11px; font-weight: 600; fill: #f0f6fc; line-height: 1.3; }
+    .cta-text { font-size: 10px; font-weight: 700; fill: #ffffff; }
     .cta-button { cursor: pointer; }
-    .cta-button:hover rect { fill: #2ea043; }
+    .cta-button:hover rect { fill: #2ea043; filter: drop-shadow(0 0 4px rgba(46, 160, 67, 0.6)); }
     a { cursor: pointer; text-decoration: none; }
+    
+    /* Subtle live pulse animation on the sponsor tag */
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.75; transform: scale(1.03); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .live-pulse { animation: pulse 3s ease-in-out infinite; transform-origin: 275px 27px; }
+
+    /* Animated gradient border shimmer */
+    @keyframes shimmer {
+      0% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: 200; }
+    }
+    .ad-inner-card:hover { stroke-dasharray: 6 3; animation: shimmer 4s linear infinite; }
+
     @media (prefers-color-scheme: light) {
       .outer-card { fill: #ffffff !important; stroke: #d0d7de !important; }
       .repo-title { fill: #0969da !important; }
@@ -41,39 +57,44 @@
     {% if has_ad %}
     <a href="{{ click_url }}" xlink:href="{{ click_url }}" target="_blank" rel="noopener noreferrer">
       <!-- Clickable Card Rect -->
-      <rect class="ad-card ad-inner-card" x="262" y="10" width="228" height="90" rx="6" fill="url(#adBg)" stroke="#30363d" stroke-width="1"/>
+      <rect class="ad-card ad-inner-card" x="256" y="8" width="236" height="94" rx="6" fill="url(#adBg)" stroke="#30363d" stroke-width="1"/>
 
       <!-- Sponsor Badge & Name -->
-      <g transform="translate(272, 20)">
-        <rect x="0" y="0" width="56" height="14" rx="3" fill="#2d1c17"/>
-        <text x="28" y="10" text-anchor="middle" class="ad-tag">SPONSOR</text>
-        <text x="64" y="11" class="sponsor-name">{{ sponsor_name }}</text>
+      <g class="live-pulse" transform="translate(266, 17)">
+        <rect x="0" y="0" width="58" height="15" rx="3" fill="#2d1c17" stroke="#f0883e" stroke-width="0.5"/>
+        <text x="29" y="11" text-anchor="middle" class="ad-tag">SPONSOR</text>
+        <text x="66" y="12" class="sponsor-name">{{ sponsor_name | truncate_text(22) }}</text>
       </g>
 
-      <!-- Headline -->
+      <!-- Headline (multi-line supported via tspan) -->
       <g clip-path="url(#headlineClip)">
-        <text x="272" y="52" class="ad-headline">{{ headline }}</text>
+        <text x="266" y="47" class="ad-headline">
+          <tspan x="266" dy="0">{{ headline | truncate_text(34) }}</tspan>
+          {% if headline | length > 34 %}
+          <tspan x="266" dy="14">{{ headline[34:] | truncate_text(34) }}</tspan>
+          {% endif %}
+        </text>
       </g>
 
-      <!-- Call to Action Button -->
-      <g class="cta-button" transform="translate(272, 70)">
-        <rect x="0" y="0" width="112" height="20" rx="4" fill="url(#btnBg)"/>
-        <text x="56" y="14" text-anchor="middle" class="cta-text">{{ cta_text }} &#x2192;</text>
+      <!-- Call to Action Button with glowing hover -->
+      <g class="cta-button" transform="translate(266, 74)">
+        <rect x="0" y="0" width="120" height="21" rx="4" fill="url(#btnBg)"/>
+        <text x="60" y="14" text-anchor="middle" class="cta-text">{{ cta_text | truncate_text(16) }} &#x2192;</text>
       </g>
     </a>
     {% else %}
-    <a href="{{ click_url | default('/onboard') }}" xlink:href="{{ click_url | default('/onboard') }}" target="_blank" rel="noopener noreferrer">
+    <a href="{{ click_url | default('/sponsor') }}" xlink:href="{{ click_url | default('/sponsor') }}" target="_blank" rel="noopener noreferrer">
       <!-- Fallback / Community Onboarding Card -->
-      <rect class="ad-card ad-inner-card" x="262" y="10" width="228" height="90" rx="6" fill="#161b22" stroke="#30363d" stroke-width="1" stroke-dasharray="3,3"/>
-      <g transform="translate(272, 22)">
-        <rect x="0" y="0" width="56" height="14" rx="3" fill="#1f242c"/>
-        <text x="28" y="10" text-anchor="middle" class="ad-tag" fill="#8b949e">SUPPORT</text>
-        <text x="64" y="11" class="sponsor-name">Open Platform</text>
+      <rect class="ad-card ad-inner-card" x="256" y="8" width="236" height="94" rx="6" fill="#161b22" stroke="#30363d" stroke-width="1" stroke-dasharray="3,3"/>
+      <g transform="translate(266, 17)">
+        <rect x="0" y="0" width="62" height="15" rx="3" fill="#1f242c" stroke="#58a6ff" stroke-width="0.5"/>
+        <text x="31" y="11" text-anchor="middle" class="ad-tag" fill="#58a6ff">AVAILABLE</text>
+        <text x="70" y="12" class="sponsor-name">ReadmePay</text>
       </g>
-      <text x="272" y="52" class="ad-headline">Sponsor this open-source project</text>
-      <g class="cta-button" transform="translate(272, 70)">
-        <rect x="0" y="0" width="112" height="20" rx="4" fill="#21262d"/>
-        <text x="56" y="14" text-anchor="middle" class="cta-text" fill="#58a6ff">Sponsor &#x2192;</text>
+      <text x="266" y="48" class="ad-headline">Sponsor {{ repo_name | truncate_text(16) }} directly</text>
+      <g class="cta-button" transform="translate(266, 74)">
+        <rect x="0" y="0" width="120" height="21" rx="4" fill="#21262d" stroke="#30363d" stroke-width="1"/>
+        <text x="60" y="14" text-anchor="middle" class="cta-text" fill="#58a6ff">&#x2665; Sponsor &#x2192;</text>
       </g>
     </a>
     {% endif %}
