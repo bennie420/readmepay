@@ -1,11 +1,12 @@
 # ReadmePay
 
-> **Economic empowerment infrastructure for independent open-source developers.**  
-> Turn your public README traffic into dependable monthly income with live GitHub metadata compilation, tech sponsorships matched to your language ecosystem, transparent 50/50 revenue sharing, and automated global payouts.
+> **Public Goods Economic Infrastructure for Independent Open-Source Developers.**  
+> Turn public README traffic into dependable monthly income &mdash; capitalized by **institutional foundation grants** and matched by **ecosystem tech sponsorships**. ReadmePay guarantees baseline developer micro-stipends from day one, with or without commercial sponsors, through transparent 50/50 revenue sharing and automated global payouts.
 
 [![ReadmePay Badge](https://readmepay.com/badge/tiangolo/fastapi.svg?theme=dark)](https://readmepay.com)
 [![Supported By](https://readmepay.com/badge/tiangolo/fastapi.svg?style=backer&theme=dracula)](https://readmepay.com/sponsors)
 [![Monthly Goal](https://readmepay.com/badge/tiangolo/fastapi.svg?style=goal&theme=emerald)](https://readmepay.com)
+[![Public Goods Grants](https://img.shields.io/badge/Public_Goods-Grants_Endowment-06b6d4?style=flat-square&logo=github)](https://readmepay.com/grants)
 
 ---
 

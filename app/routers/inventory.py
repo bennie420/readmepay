@@ -14,7 +14,7 @@ import urllib.parse
 from decimal import Decimal
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
@@ -207,9 +207,84 @@ def create_sponsor_campaign(
         "ad_id": new_ad.id,
         "sponsor_name": new_ad.sponsor_name,
         "headline": new_ad.headline,
+        "cta_text": new_ad.cta_text,
+        "click_url": new_ad.click_url,
         "target_language": new_ad.target_language,
         "target_repo_id": new_ad.target_repo_id,
         "initial_budget": float(payload.initial_budget),
+    }
+
+
+class EditCampaignRequest(BaseModel):
+    headline: Optional[str] = Field(None, min_length=5, max_length=255, description="Updated headline")
+    call_to_action: Optional[str] = Field(None, min_length=2, max_length=100, description="Updated CTA text")
+    click_url: Optional[str] = Field(None, min_length=10, max_length=1024, description="Updated click URL")
+    target_language: Optional[str] = Field(None, description="Updated target language")
+    is_active: Optional[bool] = Field(None, description="Active status toggle")
+    cost_per_click: Optional[Decimal] = Field(None, ge=Decimal("0.10"), description="Updated CPC bid")
+
+
+@router.put("/inventory/ads/{ad_id}", summary="Edit an existing sponsor campaign")
+def edit_sponsor_campaign(
+    ad_id: int,
+    payload: EditCampaignRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """
+    Allow sponsors to edit their ad copy, CTA, click destination, target language, and active status.
+    Protected by sponsor authentication cookie (GitHub SSO or brand session).
+    """
+    ad = db.query(Ad).filter(Ad.id == ad_id).first()
+    if ad is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Ad campaign with ID {ad_id} not found.",
+        )
+
+    # Verify authorization
+    auth_user = request.cookies.get("readmepay_sponsor_user")
+    auth_name = request.cookies.get("readmepay_sponsor_name") or request.cookies.get("readmepay_sponsor")
+    
+    # If a sponsor session cookie is present, ensure ownership
+    if auth_user or auth_name:
+        allowed_names = [n.lower() for n in [auth_user, auth_name] if n]
+        if ad.sponsor_name.lower() not in allowed_names:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to modify this campaign.",
+            )
+
+    if payload.headline is not None:
+        ad.headline = payload.headline.strip()
+    if payload.call_to_action is not None:
+        ad.call_to_action = payload.call_to_action.strip()
+    if payload.click_url is not None:
+        ad.click_url = payload.click_url.strip()
+    if payload.target_language is not None:
+        lang = payload.target_language.strip()
+        if lang.lower() in ("all", "general", "any"):
+            lang = "General"
+        ad.target_language = lang
+    if payload.is_active is not None:
+        ad.is_active = payload.is_active
+    if payload.cost_per_click is not None:
+        ad.cost_per_click = payload.cost_per_click
+
+    db.commit()
+    db.refresh(ad)
+
+    return {
+        "message": f"Campaign #{ad.id} updated successfully.",
+        "id": ad.id,
+        "sponsor_name": ad.sponsor_name,
+        "headline": ad.headline,
+        "call_to_action": ad.call_to_action,
+        "click_url": ad.click_url,
+        "target_language": ad.target_language,
+        "is_active": ad.is_active,
+        "cost_per_click": float(ad.cost_per_click),
+        "remaining_budget": float(ad.remaining_budget),
     }
 
 

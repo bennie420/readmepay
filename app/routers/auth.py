@@ -43,27 +43,34 @@ def get_oauth_redirect_uri(request: Request) -> str:
 @router.get("/login", summary="Initiate GitHub OAuth sign-in")
 async def github_login(
     request: Request,
+    role: str | None = Query("maintainer", description="Role: 'maintainer' or 'sponsor'"),
     repo_owner: str | None = Query(None, description="Repository owner maintainer wishes to claim"),
     repo_name: str | None = Query(None, description="Repository name maintainer wishes to claim"),
     payout_address: str | None = Query(None, description="PayPal email or crypto wallet for payouts"),
+    company_name: str | None = Query(None, description="Sponsor company name if role=sponsor"),
 ):
     """
-    Redirect maintainer to GitHub OAuth authorization screen.
-    Requests 'read:user' and 'repo' (to verify repository administration).
+    Redirect maintainer or sponsor to GitHub OAuth authorization screen.
+    For maintainers: requests 'read:user' and 'repo' (to verify repository administration).
+    For sponsors: requests 'read:user user:email' (for identity verification and financial account binding).
     """
     client_id = settings.GITHUB_CLIENT_ID or "Ov23liKUvfv2nA4ojdgD"
     redirect_uri = get_oauth_redirect_uri(request)
 
-    # Encode claim intent in state param: owner:name:payout
-    state_payload = ""
-    if repo_owner and repo_name:
-        payout = payout_address or ""
-        state_payload = f"{repo_owner}:{repo_name}:{payout}"
+    if role == "sponsor":
+        state_payload = f"sponsor:{company_name or ''}"
+        scope = "read:user user:email"
+    else:
+        state_payload = ""
+        if repo_owner and repo_name:
+            payout = payout_address or ""
+            state_payload = f"{repo_owner}:{repo_name}:{payout}"
+        scope = "read:user repo"
 
     params = {
         "client_id": client_id,
         "redirect_uri": redirect_uri,
-        "scope": "read:user repo",
+        "scope": scope,
         "state": state_payload,
         "allow_signup": "true",
     }
@@ -133,6 +140,44 @@ async def github_callback(
         github_username = user_info.get("login")
         github_id = user_info.get("id")
         user_email = user_info.get("email")
+
+        # 2b. If this is a Sponsor GitHub SSO login, establish sponsor session
+        if state.startswith("sponsor"):
+            parts = state.split(":", 1)
+            company_name = parts[1].strip() if len(parts) > 1 and parts[1].strip() else (user_info.get("company") or github_username)
+            base_url = resolve_base_url(request)
+            avatar_url = user_info.get("avatar_url", "")
+
+            html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ReadmePay Sponsor Authentication</title>
+  <style>
+    body {{ font-family: -apple-system, sans-serif; background: #0b0f19; color: #f3f4f6; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }}
+    .card {{ background: #111827; border: 1px solid #374151; border-radius: 16px; padding: 32px; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }}
+    .btn {{ display: inline-block; background: #0ea5e9; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 20px; }}
+    .avatar {{ width: 64px; height: 64px; border-radius: 50%; border: 2px solid #0ea5e9; margin-bottom: 12px; }}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="{avatar_url}" class="avatar" alt="Avatar">
+    <h2 style="margin: 0 0 8px 0; color: #38bdf8;">Verified Sponsor Authenticated</h2>
+    <p style="color: #94a3b8; font-size: 14px; margin-top: 4px;">Signed in as <strong>@{github_username}</strong> ({company_name})</p>
+    <p style="font-size: 13px; color: #cbd5e1; margin-top: 16px;">Your advertiser financial account is secured via GitHub SSO.</p>
+    <a href="{base_url}/app?tab=sponsors" class="btn">Open Sponsor Dashboard</a>
+  </div>
+  <script>
+    setTimeout(() => {{ window.location.href = "{base_url}/app?tab=sponsors"; }}, 1200);
+  </script>
+</body>
+</html>"""
+            response = HTMLResponse(content=html_content, status_code=200)
+            response.set_cookie(key="readmepay_sponsor_user", value=github_username, max_age=86400 * 30, httponly=False, samesite="lax")
+            response.set_cookie(key="readmepay_sponsor_name", value=company_name, max_age=86400 * 30, httponly=False, samesite="lax")
+            response.set_cookie(key="readmepay_sponsor_avatar", value=avatar_url, max_age=86400 * 30, httponly=False, samesite="lax")
+            return response
 
         # 3. Auto-discover and claim all public repositories owned by the maintainer
         auto_claimed_count = 0

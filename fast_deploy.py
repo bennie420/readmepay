@@ -21,6 +21,7 @@ files = [
     "app/templates/badge_goal.svg.j2",
     "app/templates/shield.svg.j2",
     "app/templates/index.html",
+    "start.py",
     "README.md",
     "PROJECT.md",
     "docs/API.md",
@@ -42,6 +43,45 @@ b64_tar = base64.b64encode(tar_stream.read()).decode("ascii")
 script = f"""
 echo '{b64_tar}' | base64 -d | tar -xzf - -C /opt/opensponsor/
 docker cp /opt/opensponsor/app/. opensponsor_app:/app/app/
+
+# Purge any fake/unregistered seeded sponsor ads from database (host and docker container)
+python3 -c "
+import sqlite3
+for db in ['/var/lib/docker/volumes/opensponsor_db_data/_data/badge_platform.db', '/opt/opensponsor/badge_platform.db']:
+    try:
+        conn = sqlite3.connect(db)
+        cur = conn.cursor()
+        fake = ('Sentry', 'Neon', 'Supabase', 'Docker', 'GitHub Sponsors', 'PostHog')
+        cur.execute('DELETE FROM ads WHERE sponsor_name IN (?, ?, ?, ?, ?, ?)', fake)
+        cnt = cur.rowcount
+        cur.execute('DELETE FROM impressions WHERE ad_id NOT IN (SELECT id FROM ads)')
+        cur.execute('DELETE FROM clicks WHERE ad_id NOT IN (SELECT id FROM ads)')
+        conn.commit()
+        conn.close()
+        print(f'Purged {{cnt}} fake sample ads from {{db}}')
+    except Exception as e:
+        print(f'Purge info {{db}}: {{e}}')
+"
+
+docker exec opensponsor_app python3 -c "
+import sqlite3
+for db in ['/data/badge_platform.db', '/app/badge_platform.db']:
+    try:
+        conn = sqlite3.connect(db)
+        cur = conn.cursor()
+        fake = ('Sentry', 'Neon', 'Supabase', 'Docker', 'GitHub Sponsors', 'PostHog')
+        cur.execute('DELETE FROM ads WHERE sponsor_name IN (?, ?, ?, ?, ?, ?)', fake)
+        cnt = cur.rowcount
+        cur.execute('DELETE FROM impressions WHERE ad_id NOT IN (SELECT id FROM ads)')
+        cur.execute('DELETE FROM clicks WHERE ad_id NOT IN (SELECT id FROM ads)')
+        conn.commit()
+        cur.execute('SELECT id, sponsor_name FROM ads')
+        print(f'Purged {{cnt}} fake ads from container {{db}}. Remaining: {{cur.fetchall()}}')
+        conn.close()
+    except Exception as e:
+        print(f'Container purge info {{db}}: {{e}}')
+"
+
 docker restart opensponsor_app
 docker restart opensponsor_caddy
 """

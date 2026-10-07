@@ -79,23 +79,36 @@ async def sponsor_login(
 async def get_current_sponsor(request: Request, db: Session = Depends(get_db)):
     """
     Check currently authenticated sponsor session and return their campaigns and KPIs.
+    Supports GitHub SSO verified sponsor cookies or legacy sponsor brand session.
     """
-    sponsor_name = request.cookies.get("readmepay_sponsor")
-    if not sponsor_name:
+    github_user = request.cookies.get("readmepay_sponsor_user")
+    sponsor_name = request.cookies.get("readmepay_sponsor_name") or request.cookies.get("readmepay_sponsor") or github_user
+    avatar_url = request.cookies.get("readmepay_sponsor_avatar") or ""
+
+    if not (github_user or sponsor_name):
         return {
             "authenticated": False,
             "sponsor_name": None,
+            "github_user": None,
+            "avatar_url": None,
             "campaigns_count": 0,
             "campaigns": [],
             "summary": None,
         }
 
-    ads = (
-        db.query(Ad)
-        .filter(func.lower(Ad.sponsor_name) == sponsor_name.lower())
-        .order_by(Ad.id.desc())
-        .all()
-    )
+    # Match campaigns by company name or GitHub username
+    from sqlalchemy import or_
+
+    conditions = []
+    if sponsor_name:
+        conditions.append(func.lower(Ad.sponsor_name) == sponsor_name.lower())
+    if github_user and github_user.lower() != (sponsor_name or "").lower():
+        conditions.append(func.lower(Ad.sponsor_name) == github_user.lower())
+
+    query = db.query(Ad)
+    if conditions:
+        query = query.filter(or_(*conditions))
+    ads = query.order_by(Ad.id.desc()).all()
 
     items = []
     total_budget = Decimal("0.00")
@@ -139,7 +152,9 @@ async def get_current_sponsor(request: Request, db: Session = Depends(get_db)):
 
     return {
         "authenticated": True,
+        "github_user": github_user,
         "sponsor_name": sponsor_name,
+        "avatar_url": avatar_url,
         "campaigns_count": len(items),
         "campaigns": items,
         "summary": {
@@ -154,11 +169,16 @@ async def get_current_sponsor(request: Request, db: Session = Depends(get_db)):
     }
 
 
+def _clear_sponsor_cookies(response: Response):
+    for k in ("readmepay_sponsor_user", "readmepay_sponsor_name", "readmepay_sponsor_avatar", "readmepay_sponsor"):
+        response.delete_cookie(key=k)
+
+
 @router.post("/logout", summary="Sign out sponsor (POST)")
 async def sponsor_logout():
     """Clear sponsor session cookie."""
     resp = JSONResponse(content={"authenticated": False, "message": "Signed out successfully."})
-    resp.delete_cookie(key="readmepay_sponsor")
+    _clear_sponsor_cookies(resp)
     return resp
 
 
@@ -167,5 +187,5 @@ async def sponsor_logout_get(request: Request):
     """Clear sponsor session cookie and redirect to sponsor portal."""
     base_url = str(request.base_url).rstrip("/")
     redirect = RedirectResponse(url=f"{base_url}/sponsors", status_code=status.HTTP_302_FOUND)
-    redirect.delete_cookie(key="readmepay_sponsor")
+    _clear_sponsor_cookies(redirect)
     return redirect

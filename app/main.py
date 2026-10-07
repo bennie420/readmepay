@@ -135,6 +135,12 @@ def create_app() -> FastAPI:
     @app_instance.get("/sponsor", include_in_schema=False)
     @app_instance.get("/sponsors", include_in_schema=False)
     @app_instance.get("/advertiser", include_in_schema=False)
+    @app_instance.get("/badges", include_in_schema=False)
+    @app_instance.get("/gallery", include_in_schema=False)
+    @app_instance.get("/directory", include_in_schema=False)
+    @app_instance.get("/grants", include_in_schema=False)
+    @app_instance.get("/mission", include_in_schema=False)
+    @app_instance.get("/about", include_in_schema=False)
     async def web_ui_dashboard():
         from fastapi.responses import HTMLResponse
         return HTMLResponse(content=get_ui_html())

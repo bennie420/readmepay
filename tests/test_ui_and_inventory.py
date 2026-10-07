@@ -29,8 +29,8 @@ def test_root_endpoint_content_negotiation(client: TestClient):
 
 
 def test_dashboard_endpoint_serves_html(client: TestClient):
-    """Verify /app and /dashboard serve web UI HTML."""
-    for path in ["/app", "/dashboard"]:
+    """Verify /app, /dashboard, /badges, /gallery, /directory, /grants, /mission, /about serve web UI HTML."""
+    for path in ["/app", "/dashboard", "/badges", "/gallery", "/directory", "/grants", "/mission", "/about"]:
         resp = client.get(path)
         assert resp.status_code == 200
         assert "text/html" in resp.headers["content-type"]

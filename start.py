@@ -119,15 +119,15 @@ def initialize_database_and_seed(force_seed: bool = False, no_seed: bool = False
         repo_count = db.scalar(select(func.count(Repository.id))) or 0
         ad_count = db.scalar(select(func.count(Ad.id))) or 0
 
-        # 1. Sponsor Ads Seeding
-        if ad_count == 0 or force_seed or reset_ads:
-            log_info("Seeding authentic tech sponsor campaigns (Sentry, Neon, Supabase, Docker, GitHub Sponsors, PostHog)...")
+        # 1. Sponsor Ads Seeding (Only when explicitly requested by CLI, never auto-seed fake sponsors)
+        if force_seed or reset_ads:
+            log_info("Seeding sample sponsor campaigns (--seed / --reset-ads explicitly requested)...")
             from scripts.seed_sample_ads import seed_sample_ads
 
             seeded_ads = seed_sample_ads(db, reset=reset_ads)
-            log_success(f"Seeded {seeded_ads} authentic sponsor campaigns into database.")
+            log_success(f"Seeded {seeded_ads} sample sponsor campaigns into database.")
         else:
-            log_info(f"Existing sponsor campaigns found ({ad_count} campaigns active).")
+            log_info(f"Sponsor inventory: {ad_count} real campaigns in database (strictly real sponsors only).")
 
         # 2. Top Repositories Seeding
         if repo_count == 0 or force_seed:
