@@ -189,6 +189,7 @@ def create_test_ad(
     remaining_budget: Decimal = Decimal("100.00"),
     total_budget: Decimal | None = Decimal("100.00"),
     active: bool = True,
+    target_repo_id: int | None = None,
 ) -> Any:
     """Factory to insert a test Ad campaign into database."""
     if Ad is None:
@@ -200,6 +201,7 @@ def create_test_ad(
         "cta_text": cta_text,
         "click_url": click_url,
         "target_language": target_language,
+        "target_repo_id": target_repo_id,
         "remaining_budget": remaining_budget,
         "active": active,
     }

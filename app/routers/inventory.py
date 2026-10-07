@@ -14,7 +14,7 @@ import urllib.parse
 from decimal import Decimal
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
@@ -115,6 +115,11 @@ def get_ads_inventory(
 
     items = []
     for a in ads:
+        clicks_cnt = len(a.clicks) if hasattr(a, "clicks") and a.clicks else 0
+        impr_cnt = len(a.impressions) if hasattr(a, "impressions") and a.impressions else 0
+        total_b = float(a.total_budget) if getattr(a, "total_budget", None) is not None else float(a.remaining_budget)
+        rem_b = float(a.remaining_budget)
+        spent = max(0.0, total_b - rem_b)
         items.append({
             "id": a.id,
             "sponsor_name": a.sponsor_name,
@@ -122,9 +127,14 @@ def get_ads_inventory(
             "cta_text": a.cta_text,
             "click_url": a.click_url,
             "target_language": a.target_language or "general",
+            "target_repo_id": a.target_repo_id,
             "cpc": float(a.cpc),
-            "remaining_budget": float(a.remaining_budget),
-            "total_budget": float(a.total_budget) if getattr(a, "total_budget", None) is not None else float(a.remaining_budget),
+            "remaining_budget": rem_b,
+            "total_budget": total_b,
+            "spent": round(spent, 2),
+            "clicks_count": clicks_cnt,
+            "impressions_count": impr_cnt,
+            "ctr": round((clicks_cnt / impr_cnt * 100), 1) if impr_cnt > 0 else 0.0,
             "is_active": a.is_active,
         })
 
@@ -140,6 +150,8 @@ class CreateCampaignRequest(BaseModel):
     call_to_action: str = Field(default="Learn More", max_length=100, description="Button CTA (e.g. Try Free, Start Trial)")
     click_url: str = Field(..., min_length=10, max_length=1024, description="Destination landing page URL")
     target_language: str = Field(default="General", description="Programming language to target (Python, Rust, TypeScript, General)")
+    target_repo_id: Optional[int] = Field(default=None, description="Optional target repository ID to sponsor exclusively")
+    target_repo_name: Optional[str] = Field(default=None, description="Optional owner/repo string (e.g. 'tiangolo/fastapi')")
     initial_budget: Decimal = Field(default=Decimal("50.00"), ge=Decimal("5.00"), description="Initial deposit budget in USD")
     cost_per_click: Decimal = Field(default=Decimal("0.50"), ge=Decimal("0.10"), description="Bid per verified click in USD")
 
@@ -147,6 +159,7 @@ class CreateCampaignRequest(BaseModel):
 @router.post("/inventory/ads", summary="Create a new sponsor ad campaign")
 def create_sponsor_campaign(
     payload: CreateCampaignRequest,
+    response: Response,
     db: Session = Depends(get_db),
 ):
     """Register a new sponsor ad campaign ready to receive funds via PayPal or Crypto."""
@@ -154,12 +167,23 @@ def create_sponsor_campaign(
     if lang.lower() in ("all", "general", "any"):
         lang = "General"
 
+    repo_id_val = payload.target_repo_id
+    if repo_id_val is None and payload.target_repo_name and "/" in payload.target_repo_name:
+        parts = payload.target_repo_name.strip().split("/", 1)
+        r_record = db.query(Repository).filter(
+            func.lower(Repository.owner) == parts[0].strip().lower(),
+            func.lower(Repository.name) == parts[1].strip().lower(),
+        ).first()
+        if r_record:
+            repo_id_val = r_record.id
+
     new_ad = Ad(
         sponsor_name=payload.sponsor_name.strip(),
         headline=payload.headline.strip(),
         call_to_action=payload.call_to_action.strip(),
         click_url=payload.click_url.strip(),
         target_language=lang,
+        target_repo_id=repo_id_val,
         total_budget=payload.initial_budget,
         remaining_budget=Decimal("0.00"),  # Funded upon checkout completion
         cost_per_click=payload.cost_per_click,
@@ -170,13 +194,97 @@ def create_sponsor_campaign(
     db.commit()
     db.refresh(new_ad)
 
+    response.set_cookie(
+        key="readmepay_sponsor",
+        value=new_ad.sponsor_name,
+        httponly=False,
+        max_age=86400 * 30,
+        samesite="lax",
+    )
+
     return {
         "message": f"Campaign '{new_ad.sponsor_name}' created successfully. Proceed to checkout to fund your impression budget.",
         "ad_id": new_ad.id,
         "sponsor_name": new_ad.sponsor_name,
         "headline": new_ad.headline,
+        "cta_text": new_ad.cta_text,
+        "click_url": new_ad.click_url,
         "target_language": new_ad.target_language,
+        "target_repo_id": new_ad.target_repo_id,
         "initial_budget": float(payload.initial_budget),
+    }
+
+
+class EditCampaignRequest(BaseModel):
+    headline: Optional[str] = Field(None, min_length=5, max_length=255, description="Updated headline")
+    call_to_action: Optional[str] = Field(None, min_length=2, max_length=100, description="Updated CTA text")
+    click_url: Optional[str] = Field(None, min_length=10, max_length=1024, description="Updated click URL")
+    target_language: Optional[str] = Field(None, description="Updated target language")
+    is_active: Optional[bool] = Field(None, description="Active status toggle")
+    cost_per_click: Optional[Decimal] = Field(None, ge=Decimal("0.10"), description="Updated CPC bid")
+
+
+@router.put("/inventory/ads/{ad_id}", summary="Edit an existing sponsor campaign")
+def edit_sponsor_campaign(
+    ad_id: int,
+    payload: EditCampaignRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """
+    Allow sponsors to edit their ad copy, CTA, click destination, target language, and active status.
+    Protected by sponsor authentication cookie (GitHub SSO or brand session).
+    """
+    ad = db.query(Ad).filter(Ad.id == ad_id).first()
+    if ad is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Ad campaign with ID {ad_id} not found.",
+        )
+
+    # Verify authorization
+    auth_user = request.cookies.get("readmepay_sponsor_user")
+    auth_name = request.cookies.get("readmepay_sponsor_name") or request.cookies.get("readmepay_sponsor")
+    
+    # If a sponsor session cookie is present, ensure ownership
+    if auth_user or auth_name:
+        allowed_names = [n.lower() for n in [auth_user, auth_name] if n]
+        if ad.sponsor_name.lower() not in allowed_names:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to modify this campaign.",
+            )
+
+    if payload.headline is not None:
+        ad.headline = payload.headline.strip()
+    if payload.call_to_action is not None:
+        ad.call_to_action = payload.call_to_action.strip()
+    if payload.click_url is not None:
+        ad.click_url = payload.click_url.strip()
+    if payload.target_language is not None:
+        lang = payload.target_language.strip()
+        if lang.lower() in ("all", "general", "any"):
+            lang = "General"
+        ad.target_language = lang
+    if payload.is_active is not None:
+        ad.is_active = payload.is_active
+    if payload.cost_per_click is not None:
+        ad.cost_per_click = payload.cost_per_click
+
+    db.commit()
+    db.refresh(ad)
+
+    return {
+        "message": f"Campaign #{ad.id} updated successfully.",
+        "id": ad.id,
+        "sponsor_name": ad.sponsor_name,
+        "headline": ad.headline,
+        "call_to_action": ad.call_to_action,
+        "click_url": ad.click_url,
+        "target_language": ad.target_language,
+        "is_active": ad.is_active,
+        "cost_per_click": float(ad.cost_per_click),
+        "remaining_budget": float(ad.remaining_budget),
     }
 
 

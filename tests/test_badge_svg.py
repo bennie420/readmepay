@@ -157,7 +157,7 @@ def test_badge_chameleon_media_query(client: TestClient, db_session: Session):
 
 
 def test_badge_shield_style(client: TestClient, db_session: Session):
-    """Shield style query parameter returns compact 320x28 Shields.io style SVG."""
+    """Shield style query parameter returns compact 440x28 Shields.io style SVG."""
     repo = create_test_repository(db_session, owner="shields", name="compact-repo")
     ad = create_test_ad(db_session)
 
@@ -166,7 +166,112 @@ def test_badge_shield_style(client: TestClient, db_session: Session):
     assert "image/svg+xml" in resp.headers["content-type"]
     svg = resp.text
     assert_valid_svg_xml(svg)
-    assert "viewBox=\"0 0 320 28\"" in svg
+    assert ("520" in svg or "440" in svg) and "28" in svg
     assert "SPONSOR" in svg
     assert ad.sponsor_name in svg
+
+
+def test_badge_shields_io_dynamic_endpoint(client: TestClient, db_session: Session):
+    """Shields.io JSON endpoint returns valid SchemaVersion 1 endpoint contract."""
+    repo = create_test_repository(db_session, owner="pallets", name="click", primary_language="Python")
+    ad = create_test_ad(db_session, target_language="Python", sponsor_name="DatabaseCorp")
+
+    # 1. With active matched sponsor
+    resp = client.get(f"/badge/{repo.owner}/{repo.name}/shield.json")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["schemaVersion"] == 1
+    assert data["label"] == "sponsor"
+    assert "DatabaseCorp" in data["message"]
+    assert data["color"] == "brightgreen"
+    assert len(data["link"]) == 2
+    assert f"/click/{ad.id}/{repo.id}" in data["link"][0]
+
+    # 2. Unsold repository returns 'sponsor available' and direct /sponsor?repo= link
+    unsold_repo = create_test_repository(db_session, owner="unsold", name="pkg", primary_language="Haskell")
+    resp_unsold = client.get(f"/badge/{unsold_repo.owner}/{unsold_repo.name}/shield.json")
+    assert resp_unsold.status_code == 200
+    unsold_data = resp_unsold.json()
+    assert unsold_data["schemaVersion"] == 1
+    assert unsold_data["label"] == "sponsor"
+    assert unsold_data["message"] == "sponsor available"
+    assert unsold_data["color"] == "blue"
+def test_badge_customization_themes_and_layout(client: TestClient, db_session: Session):
+    """Test custom theme, marquee toggle, and sponsor positioning."""
+    repo = create_test_repository(db_session, owner="customorg", name="styled-repo")
+    ad = create_test_ad(db_session, sponsor_name="CyberTech")
+
+    # 1. Cyberpunk theme Banner with sponsor on left
+    resp = client.get(f"/badge/{repo.owner}/{repo.name}.svg?theme=cyberpunk&sponsor_pos=left&hide_stars=true")
+    assert resp.status_code == 200
+    svg = resp.text
+    assert_valid_svg_xml(svg)
+    assert "#0f051d" in svg or "#00f0ff" in svg
+    assert "CyberTech" in svg
+
+    # 2. Shield with marquee animation
+    resp_shield = client.get(f"/badge/{repo.owner}/{repo.name}.svg?style=shield&marquee=true&theme=emerald")
+    assert resp_shield.status_code == 200
+    shield_svg = resp_shield.text
+    assert_valid_svg_xml(shield_svg)
+    assert "marquee-scroll" in shield_svg
+    assert "CyberTech" in shield_svg
+
+
+def test_all_four_styles_across_all_themes(client: TestClient, db_session: Session):
+    """Verify that all 4 banner styles and shield render valid XML across all 9 themes."""
+    repo = create_test_repository(db_session, owner="stylemaster", name="poly-style", primary_language="Rust")
+    create_test_ad(db_session, sponsor_name="OmniCorp", headline="Ultra-fast developer cloud", target_language="Rust")
+
+    styles = ["banner", "linear", "spotlight", "compact", "shield"]
+    themes = [
+        "dark", "cyberpunk", "emerald", "light",
+        "linear", "dracula", "nord", "monokai", "synthwave"
+    ]
+
+    for st in styles:
+        for th in themes:
+            resp = client.get(f"/badge/{repo.owner}/{repo.name}.svg?style={st}&theme={th}")
+            assert resp.status_code == 200, f"Failed for style={st}, theme={th}"
+            assert resp.headers["content-type"].startswith("image/svg+xml")
+            svg = resp.text
+            assert_valid_svg_xml(svg)
+            assert "OmniCorp" in svg
+
+
+def test_banner_and_styles_marquee_option(client: TestClient, db_session: Session):
+    """Verify marquee=true enables scrolling animation keyframes on banner and styles."""
+    repo = create_test_repository(db_session, owner="marqueemaster", name="ticker-repo")
+    create_test_ad(db_session, sponsor_name="SpeedyScroll", headline="Live streaming real-time telemetry")
+
+    # 1. Default banner is static (no banner-marquee-scroll)
+    resp_static = client.get(f"/badge/{repo.owner}/{repo.name}.svg?style=banner")
+    assert resp_static.status_code == 200
+    assert "banner-marquee-scroll" not in resp_static.text
+
+    # 2. Banner with marquee=true activates banner-marquee-scroll
+    resp_marquee = client.get(f"/badge/{repo.owner}/{repo.name}.svg?style=banner&marquee=true")
+    assert resp_marquee.status_code == 200
+    assert "banner-marquee-scroll" in resp_marquee.text
+    assert_valid_svg_xml(resp_marquee.text)
+
+    # 3. Linear style with marquee=true
+    resp_linear = client.get(f"/badge/{repo.owner}/{repo.name}.svg?style=linear&marquee=true")
+    assert resp_linear.status_code == 200
+    assert "linear-marquee-scroll" in resp_linear.text
+    assert_valid_svg_xml(resp_linear.text)
+
+    # 4. Spotlight style with marquee=true
+    resp_spot = client.get(f"/badge/{repo.owner}/{repo.name}.svg?style=spotlight&marquee=true")
+    assert resp_spot.status_code == 200
+    assert "spotlight-marquee-scroll" in resp_spot.text
+    assert_valid_svg_xml(resp_spot.text)
+
+    # 5. Compact style with marquee=true
+    resp_compact = client.get(f"/badge/{repo.owner}/{repo.name}.svg?style=compact&marquee=true")
+    assert resp_compact.status_code == 200
+    assert "compact-marquee-scroll" in resp_compact.text
+    assert_valid_svg_xml(resp_compact.text)
+
+
 

@@ -14,6 +14,7 @@ from __future__ import annotations
 import logging
 import urllib.parse
 from datetime import UTC, datetime
+from decimal import Decimal
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -26,6 +27,7 @@ from app.database import get_db
 from app.models.repository import Repository
 from app.routers.maintainers import generate_badge_snippets, resolve_base_url
 from app.schemas.repo import ClaimRepoResponse, RepoResponse
+from app.services.revenue_service import calculate_repository_revenue
 
 logger = logging.getLogger("router_auth")
 
@@ -41,27 +43,34 @@ def get_oauth_redirect_uri(request: Request) -> str:
 @router.get("/login", summary="Initiate GitHub OAuth sign-in")
 async def github_login(
     request: Request,
+    role: str | None = Query("maintainer", description="Role: 'maintainer' or 'sponsor'"),
     repo_owner: str | None = Query(None, description="Repository owner maintainer wishes to claim"),
     repo_name: str | None = Query(None, description="Repository name maintainer wishes to claim"),
     payout_address: str | None = Query(None, description="PayPal email or crypto wallet for payouts"),
+    company_name: str | None = Query(None, description="Sponsor company name if role=sponsor"),
 ):
     """
-    Redirect maintainer to GitHub OAuth authorization screen.
-    Requests 'read:user' and 'repo' (to verify repository administration).
+    Redirect maintainer or sponsor to GitHub OAuth authorization screen.
+    For maintainers: requests 'read:user' and 'repo' (to verify repository administration).
+    For sponsors: requests 'read:user user:email' (for identity verification and financial account binding).
     """
     client_id = settings.GITHUB_CLIENT_ID or "Ov23liKUvfv2nA4ojdgD"
     redirect_uri = get_oauth_redirect_uri(request)
 
-    # Encode claim intent in state param: owner:name:payout
-    state_payload = ""
-    if repo_owner and repo_name:
-        payout = payout_address or ""
-        state_payload = f"{repo_owner}:{repo_name}:{payout}"
+    if role == "sponsor":
+        state_payload = f"sponsor:{company_name or ''}"
+        scope = "read:user user:email"
+    else:
+        state_payload = ""
+        if repo_owner and repo_name:
+            payout = payout_address or ""
+            state_payload = f"{repo_owner}:{repo_name}:{payout}"
+        scope = "read:user repo"
 
     params = {
         "client_id": client_id,
         "redirect_uri": redirect_uri,
-        "scope": "read:user repo",
+        "scope": scope,
         "state": state_payload,
         "allow_signup": "true",
     }
@@ -132,7 +141,108 @@ async def github_callback(
         github_id = user_info.get("id")
         user_email = user_info.get("email")
 
-    # 3. If state contains claim intent (owner:name:payout), verify permissions & execute claim!
+        # 2b. If this is a Sponsor GitHub SSO login, establish sponsor session
+        if state.startswith("sponsor"):
+            parts = state.split(":", 1)
+            company_name = parts[1].strip() if len(parts) > 1 and parts[1].strip() else (user_info.get("company") or github_username)
+            base_url = resolve_base_url(request)
+            avatar_url = user_info.get("avatar_url", "")
+
+            html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ReadmePay Sponsor Authentication</title>
+  <style>
+    body {{ font-family: -apple-system, sans-serif; background: #0b0f19; color: #f3f4f6; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }}
+    .card {{ background: #111827; border: 1px solid #374151; border-radius: 16px; padding: 32px; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }}
+    .btn {{ display: inline-block; background: #0ea5e9; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 20px; }}
+    .avatar {{ width: 64px; height: 64px; border-radius: 50%; border: 2px solid #0ea5e9; margin-bottom: 12px; }}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="{avatar_url}" class="avatar" alt="Avatar">
+    <h2 style="margin: 0 0 8px 0; color: #38bdf8;">Verified Sponsor Authenticated</h2>
+    <p style="color: #94a3b8; font-size: 14px; margin-top: 4px;">Signed in as <strong>@{github_username}</strong> ({company_name})</p>
+    <p style="font-size: 13px; color: #cbd5e1; margin-top: 16px;">Your advertiser financial account is secured via GitHub SSO.</p>
+    <a href="{base_url}/app?tab=sponsors" class="btn">Open Sponsor Dashboard</a>
+  </div>
+  <script>
+    setTimeout(() => {{ window.location.href = "{base_url}/app?tab=sponsors"; }}, 1200);
+  </script>
+</body>
+</html>"""
+            response = HTMLResponse(content=html_content, status_code=200)
+            response.set_cookie(key="readmepay_sponsor_user", value=github_username, max_age=86400 * 30, httponly=False, samesite="lax")
+            response.set_cookie(key="readmepay_sponsor_name", value=company_name, max_age=86400 * 30, httponly=False, samesite="lax")
+            response.set_cookie(key="readmepay_sponsor_avatar", value=avatar_url, max_age=86400 * 30, httponly=False, samesite="lax")
+            return response
+
+        # 3. Auto-discover and claim all public repositories owned by the maintainer
+        auto_claimed_count = 0
+        now = datetime.now(UTC)
+        try:
+            repos_resp = await client.get(
+                "https://api.github.com/user/repos?affiliation=owner&visibility=public&per_page=100",
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Accept": "application/vnd.github+json",
+                    "User-Agent": "ReadmePay-Verifier/1.0",
+                },
+            )
+            public_repos_data = repos_resp.json() if repos_resp.status_code == 200 else []
+        except Exception as exc:
+            logger.warning("Could not fetch user repos from GitHub: %s", exc)
+            public_repos_data = []
+
+        if isinstance(public_repos_data, list):
+            for r_info in public_repos_data:
+                if not isinstance(r_info, dict) or r_info.get("fork"):
+                    continue
+                r_owner = r_info.get("owner", {}).get("login", github_username)
+                r_name = r_info.get("name")
+                if not r_name:
+                    continue
+
+                r_entry = (
+                    db.query(Repository)
+                    .filter(
+                        func.lower(Repository.owner) == r_owner.lower(),
+                        func.lower(Repository.name) == r_name.lower(),
+                    )
+                    .first()
+                )
+
+                if r_entry is None:
+                    r_entry = Repository(
+                        owner=r_owner,
+                        name=r_name,
+                        github_id=r_info.get("id"),
+                        description=r_info.get("description"),
+                        stars=r_info.get("stargazers_count", 0),
+                        primary_language=r_info.get("language"),
+                        ci_status="passing",
+                        claimed=True,
+                        claimed_by=github_username,
+                        maintainer_handle=github_username,
+                        payout_address=user_email,
+                        claimed_at=now,
+                    )
+                    db.add(r_entry)
+                    auto_claimed_count += 1
+                elif not r_entry.claimed or r_entry.claimed_by == github_username or r_entry.owner.lower() == github_username.lower():
+                    r_entry.claimed = True
+                    r_entry.claimed_by = github_username
+                    r_entry.maintainer_handle = github_username
+                    if not r_entry.payout_address and user_email:
+                        r_entry.payout_address = user_email
+                    r_entry.claimed_at = r_entry.claimed_at or now
+                    r_entry.updated_at = now
+                    auto_claimed_count += 1
+            db.commit()
+
+    # 4. If state contains explicit claim intent (owner:name:payout), verify permissions & execute claim!
     claimed_repo_info = None
     verification_error = None
 
@@ -143,8 +253,6 @@ async def github_callback(
         payout_addr = parts[2].strip() if len(parts) > 2 and parts[2].strip() else None
 
         # Verify maintainer permission on target repo
-        # If repo owner is user, permission is verified.
-        # Otherwise query GitHub API: GET /repos/{owner}/{repo}/collaborators/{username}/permission
         is_authorized = False
         if github_username.lower() == repo_owner.lower():
             is_authorized = True
@@ -169,7 +277,6 @@ async def github_callback(
                     verification_error = f"GitHub user '{github_username}' is not a registered collaborator or maintainer on '{repo_owner}/{repo_name}'."
 
         if is_authorized:
-            # Query repo in DB or GitHub
             repo = (
                 db.query(Repository)
                 .filter(
@@ -185,7 +292,6 @@ async def github_callback(
 
             if repo:
                 now = datetime.now(UTC)
-                # Atomically claim or update maintainer address
                 repo.claimed = True
                 repo.claimed_by = github_username
                 repo.maintainer_handle = github_username
@@ -238,7 +344,7 @@ async def github_callback(
     <div class="user-box">
       <img src="{user_info.get('avatar_url', '')}" class="avatar" alt="Avatar">
       <div>
-        <div style="font-weight: 600; font-size: 16px; color: #fff;">{github_username}</div>
+        <div style="font-weight: 600; font-size: 16px; color: #fff;">@{github_username}</div>
         <div style="font-size: 13px; color: #94a3b8;">GitHub ID: {github_id} {f'• {user_email}' if user_email else ''}</div>
       </div>
     </div>
@@ -247,11 +353,18 @@ async def github_callback(
     if claimed_repo_info:
         html_content += f"""
     <div style="margin-top: 20px; border-top: 1px solid #334155; pt: 16px;">
-      <h3 style="color: #4ade80; margin-bottom: 4px;">✓ Repository Claimed & Bound to Payouts!</h3>
+      <h3 style="color: #4ade80; margin-bottom: 4px;">✓ Target Repository Claimed!</h3>
       <p>Target: <strong>{claimed_repo_info['owner']}/{claimed_repo_info['name']}</strong></p>
       <p>Payout Address Registered: <strong>{claimed_repo_info['payout_address']}</strong></p>
-      <p style="margin-top: 12px;">Add this badge to your GitHub <code>README.md</code> to begin earning 50% revenue share on impressions:</p>
+      <p style="margin-top: 12px;">Add this badge to your GitHub <code>README.md</code>:</p>
       <div class="code-box">{claimed_repo_info['markdown_snippet']}</div>
+    </div>
+"""
+    elif auto_claimed_count > 0:
+        html_content += f"""
+    <div style="margin-top: 20px; border-top: 1px solid #334155; pt: 16px;">
+      <h3 style="color: #4ade80; margin-bottom: 4px;">✓ Enrolled {auto_claimed_count} Public Repositories!</h3>
+      <p>All your public GitHub repositories are now connected to ReadmePay so you earn 50% revenue share across all your projects. You can manage or pause individual repositories in your Maintainer Dashboard.</p>
     </div>
 """
     elif verification_error:
@@ -261,16 +374,114 @@ async def github_callback(
 """
     else:
         html_content += f"""
-    <p>You are now authenticated as <strong>@{github_username}</strong>. You can claim any repository where you have owner or write collaborator access.</p>
+    <p>You are now authenticated as <strong>@{github_username}</strong>. All your public repositories are accessible from your private dashboard.</p>
 """
 
     html_content += f"""
     <div style="margin-top: 24px;">
-      <a href="{base_url}" class="btn">Return to Dashboard</a>
-      <a href="{base_url}/docs" class="btn" style="background: transparent; color: #94a3b8; border: 1px solid #334155; margin-left: 8px;">API Documentation</a>
+      <a href="{base_url}/app?tab=revenue" class="btn">Open Maintainer Dashboard</a>
+      <a href="{base_url}" class="btn" style="background: transparent; color: #94a3b8; border: 1px solid #334155; margin-left: 8px;">Badge Studio</a>
     </div>
   </div>
 </body>
 </html>
 """
-    return HTMLResponse(content=html_content, status_code=200)
+    response = HTMLResponse(content=html_content, status_code=200)
+    response.set_cookie(
+        key="readmepay_user",
+        value=github_username,
+        max_age=86400 * 30,  # 30 days
+        httponly=False,
+        samesite="lax",
+    )
+    return response
+
+
+@router.get("/user", summary="Get currently authenticated GitHub maintainer")
+async def get_current_user(request: Request, db: Session = Depends(get_db)):
+    """Return verified GitHub user information, summary metrics, and owned repositories."""
+    username = request.cookies.get("readmepay_user")
+    if not username:
+        return {"authenticated": False, "username": None, "repos": []}
+
+    user_repos = (
+        db.query(Repository)
+        .filter(
+            (func.lower(Repository.maintainer_handle) == username.lower())
+            | (func.lower(Repository.claimed_by) == username.lower())
+            | (func.lower(Repository.owner) == username.lower())
+        )
+        .all()
+    )
+
+    base_url = resolve_base_url(request)
+    repos_data = []
+    total_impressions = 0
+    total_clicks = 0
+    total_gross = Decimal("0.00")
+    total_earnings = Decimal("0.00")
+    claimed_count = 0
+    default_payout = None
+
+    for r in user_repos:
+        if r.claimed:
+            claimed_count += 1
+            if r.payout_address and not default_payout:
+                default_payout = r.payout_address
+
+        rev = calculate_repository_revenue(db, r.id)
+        repo_earnings = rev["maintainer_earnings"]
+        repo_clicks = rev["clicks_count"]
+        repo_impressions = rev["impressions_count"]
+
+        if r.claimed:
+            total_impressions += repo_impressions
+            total_clicks += repo_clicks
+            total_gross += Decimal(str(rev["gross_revenue"]))
+            total_earnings += Decimal(str(repo_earnings))
+
+        snippets = generate_badge_snippets(r.owner, r.name, r.id, base_url)
+        repos_data.append({
+            "id": r.id,
+            "owner": r.owner,
+            "name": r.name,
+            "full_name": f"{r.owner}/{r.name}",
+            "stars": r.stars,
+            "primary_language": r.primary_language,
+            "claimed": r.claimed,
+            "payout_address": r.payout_address or default_payout,
+            "claimed_at": r.claimed_at.isoformat() if r.claimed_at else None,
+            "impressions": repo_impressions,
+            "clicks": repo_clicks,
+            "earnings": repo_earnings,
+            "badge_url": snippets["badge_url"],
+            "markdown_snippet": snippets["markdown"],
+        })
+
+    repos_data.sort(key=lambda x: (not x["claimed"], -x["stars"]))
+
+    return {
+        "authenticated": True,
+        "username": username,
+        "default_payout": default_payout,
+        "summary": {
+            "total_repos": len(repos_data),
+            "claimed_repos_count": claimed_count,
+            "total_impressions": total_impressions,
+            "total_clicks": total_clicks,
+            "gross_revenue": float(total_gross),
+            "total_earnings": float(total_earnings),
+        },
+        "repos_count": len(repos_data),
+        "repos": repos_data,
+    }
+
+
+
+@router.get("/logout", summary="Sign out maintainer")
+async def logout_user(request: Request):
+    """Clear session cookie and redirect to home."""
+    base_url = resolve_base_url(request)
+    redirect = RedirectResponse(url=f"{base_url}/app?tab=revenue", status_code=status.HTTP_302_FOUND)
+    redirect.delete_cookie(key="readmepay_user")
+    return redirect

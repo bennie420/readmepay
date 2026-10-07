@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="500"
+     height="110"
+     viewBox="0 0 500 110"
+     fill="none"
+     role="img"
+     aria-label="{{ repo_name }} sponsorship badge">
+  <style>
+    .f-mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; }
+    .f-sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .repo-mono { font-size: 13.5px; font-weight: 700; fill: {{ palette.text_title | default('#a78bfa') }}; letter-spacing: -0.2px; }
+    .meta-mono { font-size: 10.5px; font-weight: 600; fill: {{ palette.text_meta | default('#e2e8f0') }}; }
+    .ad-card { cursor: pointer; transition: all 0.25s ease; }
+    .ad-card:hover { stroke: {{ palette.border_accent | default('#a855f7') }}; }
+    .sponsor-name { font-size: 11.5px; font-weight: 800; fill: #ffffff; letter-spacing: 0.4px; }
+    .partner-tag { font-size: 9px; font-weight: 700; fill: {{ palette.accent | default('#a855f7') }}; }
+    .ad-headline { font-size: 10.5px; font-weight: 500; fill: {{ palette.text_headline | default('#d1d5db') }}; }
+    .cta-button { cursor: pointer; }
+    .cta-text { font-size: 9.5px; font-weight: 800; fill: {{ palette.accent | default('#c084fc') }}; letter-spacing: 0.5px; }
+    a { cursor: pointer; text-decoration: none; }
+
+    /* Animated pulsing beacon dot */
+    @keyframes pulse-linear {
+      0% { r: 3px; opacity: 1; }
+      50% { r: 4.5px; opacity: 0.4; }
+      100% { r: 3px; opacity: 1; }
+    }
+    .linear-beacon { animation: pulse-linear 2s ease-in-out infinite; }
+
+    {% if marquee %}
+    /* Smooth Continuous Sponsor Marquee */
+    @keyframes linear-marquee-scroll {
+      0% { transform: translateX(110px); }
+      100% { transform: translateX(-190px); }
+    }
+    .linear-marquee-track {
+      animation: linear-marquee-scroll 10s linear infinite;
+    }
+    .linear-marquee-track:hover {
+      animation-play-state: paused;
+    }
+    {% endif %}
+
+    @media (prefers-color-scheme: light) {
+      .outer-card { fill: #ffffff !important; stroke: #d0d7de !important; }
+      .repo-mono { fill: #0969da !important; }
+      .meta-mono { fill: #24292f !important; }
+      .ad-inner-card { fill: #f6f8fa !important; stroke: #d0d7de !important; }
+      .ad-headline { fill: #24292f !important; }
+      .sponsor-name { fill: #1f2328 !important; }
+    }
+  </style>
+
+  <!-- Pitch Black Canvas with Corner Border Gradient -->
+  <rect class="outer-card" x="0.5" y="0.5" width="499" height="109" rx="8" fill="url(#linearCardBg)" stroke="url(#linearBorder)" stroke-width="1"/>
+  <!-- Top Accent Line -->
+  <line x1="10" y1="1" x2="490" y2="1" stroke="{{ palette.accent | default('#a855f7') }}" stroke-opacity="0.6" stroke-width="1.2" stroke-linecap="round"/>
+
+  {% set is_sponsor_left = (sponsor_position == 'left') %}
+  {% set ad_card_x = 8 if is_sponsor_left else 256 %}
+  {% set meta_x = 256 if is_sponsor_left else 16 %}
+  {% set div_x = 248 if is_sponsor_left else 248 %}
+
+  <!-- Ambient Radial Glow Behind Sponsor Card -->
+  <rect x="{{ ad_card_x }}" y="8" width="236" height="94" rx="8" fill="url(#linearSpot)"/>
+
+  <!-- Sponsor Ad Card Component -->
+  <g class="f-sans" id="sponsor-card">
+    {% if has_ad %}
+    <a href="{{ click_url }}" xlink:href="{{ click_url }}" target="_blank" rel="noopener noreferrer">
+      <!-- Inset Linear Card -->
+      <rect class="ad-card ad-inner-card" x="{{ ad_card_x }}" y="8" width="236" height="94" rx="6" fill="url(#linearAdBg)" stroke="{{ palette.border | default('#2e2640') }}" stroke-width="1"/>
+
+      <!-- Header: Sponsor Tag + Name -->
+      <g transform="translate({{ ad_card_x + 12 }}, 18)">
+        <circle class="linear-beacon" cx="4" cy="5" r="3" fill="{{ palette.accent | default('#a855f7') }}"/>
+        <text x="14" y="9" class="sponsor-name">{{ sponsor_name | truncate_text(16) }}</text>
+        <text x="{% if sponsor_name %}{{ (sponsor_name | length) * 7.5 + 20 }}{% else %}70{% endif %}" y="9" class="partner-tag">&#8226; Partner</text>
+      </g>
+
+      <!-- Headline -->
+      <g clip-path="url(#linearHeadlineClip-{{ ad_card_x }})">
+        {% if marquee %}
+        <g class="linear-marquee-track">
+          <text x="{{ ad_card_x + 12 }}" y="48" class="ad-headline">
+            <tspan>{{ headline }}</tspan>
+          </text>
+        </g>
+        {% else %}
+        <text x="{{ ad_card_x + 12 }}" y="48" class="ad-headline">
+          <tspan x="{{ ad_card_x + 12 }}" dy="0">{{ headline | truncate_text(35) }}</tspan>
+          {% if headline | length > 35 %}
+          <tspan x="{{ ad_card_x + 12 }}" dy="13.5">{{ headline[35:] | truncate_text(35) }}</tspan>
+          {% endif %}
+        </text>
+        {% endif %}
+      </g>
+
+      <!-- Neo-Brutalist CTA Outline Pill -->
+      <g class="cta-button" transform="translate({{ ad_card_x + 12 }}, 73)">
+        <rect x="0" y="0" width="124" height="21" rx="4" fill="none" stroke="{{ palette.accent | default('#a855f7') }}" stroke-width="1"/>
+        <text x="62" y="14" text-anchor="middle" class="cta-text">{{ cta_text | truncate_text(14) }} &#x2192;</text>
+      </g>
+    </a>
+    {% else %}
+    <a href="{{ click_url | default('/sponsor') }}" xlink:href="{{ click_url | default('/sponsor') }}" target="_blank" rel="noopener noreferrer">
+      <rect class="ad-card ad-inner-card" x="{{ ad_card_x }}" y="8" width="236" height="94" rx="6" fill="#0d0e14" stroke="{{ palette.border | default('#2e2640') }}" stroke-width="1" stroke-dasharray="3,3"/>
+      <g transform="translate({{ ad_card_x + 12 }}, 18)">
+        <circle cx="4" cy="5" r="3" fill="{{ palette.accent | default('#a855f7') }}"/>
+        <text x="14" y="9" class="sponsor-name">ReadmePay</text>
+        <text x="85" y="9" class="partner-tag">&#8226; Open Slot</text>
+      </g>
+      <text x="{{ ad_card_x + 12 }}" y="48" class="ad-headline">Sponsor this developer project</text>
+      <g class="cta-button" transform="translate({{ ad_card_x + 12 }}, 73)">
+        <rect x="0" y="0" width="124" height="21" rx="4" fill="none" stroke="{{ palette.accent | default('#a855f7') }}" stroke-width="1"/>
+        <text x="62" y="14" text-anchor="middle" class="cta-text">&#x2665; SPONSOR &#x2192;</text>
+      </g>
+    </a>
+    {% endif %}
+  </g>
+
+  <!-- Left: Monospace Tech Identity Section -->
+  <g class="f-mono" id="repo-metadata">
+    <!-- Terminal Prompt + Repo Name -->
+    <g transform="translate({{ meta_x }}, 22)">
+      <text x="0" y="11" class="repo-mono">&gt; {{ repo_name }}</text>
+    </g>
+
+    <!-- Star Count, Language & Status Cluster -->
+    <g transform="translate({{ meta_x }}, 50)">
+      {% if not hide_stars %}
+      <text x="0" y="10" class="meta-mono" fill="#fbbf24">&#x2605; {{ formatted_stars }}</text>
+      {% endif %}
+      {% if language %}
+      <text x="{% if hide_stars %}0{% else %}76{% endif %}" y="10" class="meta-mono" fill="{{ lang_color }}">&#x25CF; {{ language | truncate_text(9, '') }}</text>
+      {% endif %}
+    </g>
+
+    <g transform="translate({{ meta_x }}, 76)">
+      {% if ci_status %}
+      <text x="0" y="10" class="meta-mono" fill="{{ ci_bg_color }}">&#x2713; ci:{{ ci_status }}</text>
+      {% endif %}
+      <text x="{% if ci_status %}80{% else %}0{% endif %}" y="10" font-size="9.5px" fill="#64748b">&#x25C6; verified open-source</text>
+    </g>
+  </g>
+
+  <!-- Clean Vertical Divider Line -->
+  <line class="divider-line" x1="{{ div_x }}" y1="12" x2="{{ div_x }}" y2="98" stroke="{{ palette.border | default('#2e2640') }}" stroke-width="1" opacity="0.6"/>
+
+  <defs>
+    <linearGradient id="linearCardBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="{{ palette.card_bg_0 | default('#08090d') }}"/>
+      <stop offset="100%" stop-color="{{ palette.card_bg_1 | default('#030407') }}"/>
+    </linearGradient>
+    <linearGradient id="linearBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="{{ palette.border | default('#2e2640') }}"/>
+      <stop offset="100%" stop-color="{{ palette.border_accent | default('#7c3aed') }}" stop-opacity="0.6"/>
+    </linearGradient>
+    <radialGradient id="linearSpot" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="{{ palette.glow | default('#a855f7') }}" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="{{ palette.card_bg_1 | default('#030407') }}" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="linearAdBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="{{ palette.ad_bg_0 | default('#13111c') }}" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="{{ palette.ad_bg_1 | default('#0b0a12') }}" stop-opacity="0.95"/>
+    </linearGradient>
+    <clipPath id="linearHeadlineClip-{{ ad_card_x }}">
+      <rect x="{{ ad_card_x + 12 }}" y="37" width="212" height="28"/>
+    </clipPath>
+  </defs>
+</svg>

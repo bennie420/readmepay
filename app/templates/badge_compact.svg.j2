@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="500"
+     height="110"
+     viewBox="0 0 500 110"
+     fill="none"
+     role="img"
+     aria-label="{{ repo_name }} sponsorship badge">
+  <style>
+    .f-sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .compact-title { font-size: 13.5px; font-weight: 700; fill: {{ palette.text_title | default('#38bdf8') }}; }
+    .compact-meta { font-size: 10.5px; font-weight: 600; fill: {{ palette.text_meta | default('#cbd5e1') }}; }
+    .ad-card { cursor: pointer; transition: all 0.2s ease; }
+    .ad-card:hover { stroke: {{ palette.accent | default('#38bdf8') }}; }
+    .sponsor-title { font-size: 12px; font-weight: 800; fill: #ffffff; }
+    .ad-tag { font-size: 8px; font-weight: 800; fill: {{ palette.accent | default('#4ade80') }}; letter-spacing: 0.5px; }
+    .ad-headline { font-size: 10px; font-weight: 500; fill: {{ palette.text_headline | default('#94a3b8') }}; }
+    .cta-link { font-size: 10px; font-weight: 700; fill: {{ palette.accent | default('#38bdf8') }}; cursor: pointer; }
+    .cta-link:hover { text-decoration: underline; }
+    a { cursor: pointer; text-decoration: none; }
+
+    {% if marquee %}
+    /* Smooth Continuous Sponsor Marquee */
+    @keyframes compact-marquee-scroll {
+      0% { transform: translateX(110px); }
+      100% { transform: translateX(-190px); }
+    }
+    .compact-marquee-track {
+      animation: compact-marquee-scroll 10s linear infinite;
+    }
+    .compact-marquee-track:hover {
+      animation-play-state: paused;
+    }
+    {% endif %}
+
+    @media (prefers-color-scheme: light) {
+      .outer-card { fill: #ffffff !important; stroke: #d0d7de !important; }
+      .compact-title { fill: #0969da !important; }
+      .compact-meta { fill: #24292f !important; }
+      .ad-inner-card { fill: #f6f8fa !important; stroke: #d0d7de !important; }
+      .ad-headline { fill: #57606a !important; }
+      .sponsor-title { fill: #1f2328 !important; }
+    }
+  </style>
+
+  <!-- Sleek Outer Card -->
+  <rect class="outer-card" x="0.5" y="0.5" width="499" height="109" rx="8" fill="url(#compactCardBg)" stroke="{{ palette.border | default('#1e293b') }}" stroke-width="1"/>
+  <!-- Top Subtle Accent -->
+  <line x1="10" y1="1" x2="490" y2="1" stroke="{{ palette.accent | default('#38bdf8') }}" stroke-opacity="0.5" stroke-width="1.2" stroke-linecap="round"/>
+
+  {% set is_sponsor_left = (sponsor_position == 'left') %}
+  {% set ad_card_x = 8 if is_sponsor_left else 256 %}
+  {% set meta_x = 256 if is_sponsor_left else 16 %}
+  {% set div_x = 248 if is_sponsor_left else 248 %}
+
+  <!-- Sponsor Micro-Card Component -->
+  <g class="f-sans" id="sponsor-card">
+    {% if has_ad %}
+    <a href="{{ click_url }}" xlink:href="{{ click_url }}" target="_blank" rel="noopener noreferrer">
+      <!-- Inset Card -->
+      <rect class="ad-card ad-inner-card" x="{{ ad_card_x }}" y="8" width="236" height="94" rx="6" fill="url(#compactAdBg)" stroke="{{ palette.border | default('#1e293b') }}" stroke-width="1"/>
+
+      <!-- Header: Sponsor Name + Tag -->
+      <g transform="translate({{ ad_card_x + 12 }}, 20)">
+        <text x="0" y="10" class="sponsor-title">{{ sponsor_name | truncate_text(16) }}</text>
+        <rect x="{% if sponsor_name %}{{ (sponsor_name | length) * 7.5 + 8 }}{% else %}64{% endif %}" y="-1" width="56" height="14" rx="3" fill="{{ palette.accent | default('#22c55e') }}" fill-opacity="0.15" stroke="{{ palette.accent | default('#22c55e') }}" stroke-width="0.5"/>
+        <text x="{% if sponsor_name %}{{ (sponsor_name | length) * 7.5 + 36 }}{% else %}92{% endif %}" y="9.5" text-anchor="middle" class="ad-tag">SPONSOR</text>
+      </g>
+
+      <!-- Headline -->
+      <g clip-path="url(#compactHeadlineClip-{{ ad_card_x }})">
+        {% if marquee %}
+        <g class="compact-marquee-track">
+          <text x="{{ ad_card_x + 12 }}" y="50" class="ad-headline">
+            <tspan>{{ headline }}</tspan>
+          </text>
+        </g>
+        {% else %}
+        <text x="{{ ad_card_x + 12 }}" y="50" class="ad-headline">
+          <tspan x="{{ ad_card_x + 12 }}" dy="0">{{ headline | truncate_text(36) }}</tspan>
+          {% if headline | length > 36 %}
+          <tspan x="{{ ad_card_x + 12 }}" dy="13">{{ headline[36:] | truncate_text(36) }}</tspan>
+          {% endif %}
+        </text>
+        {% endif %}
+      </g>
+
+      <!-- Streamlined Link CTA -->
+      <g transform="translate({{ ad_card_x + 12 }}, 80)">
+        <text x="0" y="0" class="cta-link">{{ cta_text | truncate_text(20) }} &#x2192;</text>
+      </g>
+    </a>
+    {% else %}
+    <a href="{{ click_url | default('/sponsor') }}" xlink:href="{{ click_url | default('/sponsor') }}" target="_blank" rel="noopener noreferrer">
+      <rect class="ad-card ad-inner-card" x="{{ ad_card_x }}" y="8" width="236" height="94" rx="6" fill="#0b1120" stroke="{{ palette.border | default('#1e293b') }}" stroke-width="1" stroke-dasharray="3,3"/>
+      <g transform="translate({{ ad_card_x + 12 }}, 20)">
+        <text x="0" y="10" class="sponsor-title">ReadmePay</text>
+        <rect x="76" y="-1" width="56" height="14" rx="3" fill="#38bdf8" fill-opacity="0.15" stroke="#38bdf8" stroke-width="0.5"/>
+        <text x="104" y="9.5" text-anchor="middle" class="ad-tag" fill="#38bdf8">AVAILABLE</text>
+      </g>
+      <text x="{{ ad_card_x + 12 }}" y="50" class="ad-headline">Sponsor this open-source project</text>
+      <g transform="translate({{ ad_card_x + 12 }}, 80)">
+        <text x="0" y="0" class="cta-link">&#x2665; Sponsor Repo &#x2192;</text>
+      </g>
+    </a>
+    {% endif %}
+  </g>
+
+  <!-- Left: Streamlined Repository Identity -->
+  <g class="f-sans" id="repo-metadata">
+    <g transform="translate({{ meta_x }}, 22)">
+      <text x="0" y="11" class="compact-title">{{ repo_name }}</text>
+    </g>
+
+    <!-- Meta row with stars and language -->
+    <g transform="translate({{ meta_x }}, 48)">
+      {% if not hide_stars %}
+      <text x="0" y="11" class="compact-meta" fill="#facc15">&#x2605; {{ formatted_stars }}</text>
+      {% endif %}
+
+      {% if language %}
+      <g transform="translate({% if hide_stars %}0{% else %}68{% endif %}, 0)">
+        <circle cx="4" cy="8" r="3.5" fill="{{ lang_color }}"/>
+        <text x="12" y="11" class="compact-meta">{{ language | truncate_text(9, '') }}</text>
+      </g>
+      {% endif %}
+    </g>
+
+    <!-- Trust Row -->
+    <g transform="translate({{ meta_x }}, 76)">
+      {% if ci_status %}
+      <text x="0" y="10" font-size="10px" font-weight="700" fill="{{ ci_bg_color }}">&#x2713; {{ ci_status }}</text>
+      {% endif %}
+      <text x="{% if ci_status %}68{% else %}0{% endif %}" y="10" font-size="9.5px" font-weight="500" fill="#64748b">&#8226; ReadmePay Verified</text>
+    </g>
+  </g>
+
+  <!-- Clean Vertical Divider -->
+  <line class="divider-line" x1="{{ div_x }}" y1="12" x2="{{ div_x }}" y2="98" stroke="{{ palette.border | default('#1e293b') }}" stroke-width="1" opacity="0.6"/>
+
+  <defs>
+    <linearGradient id="compactCardBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="{{ palette.card_bg_0 | default('#0f172a') }}"/>
+      <stop offset="100%" stop-color="{{ palette.card_bg_1 | default('#020617') }}"/>
+    </linearGradient>
+    <linearGradient id="compactAdBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="{{ palette.ad_bg_0 | default('#1e293b') }}" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="{{ palette.ad_bg_1 | default('#0f172a') }}" stop-opacity="0.6"/>
+    </linearGradient>
+    <clipPath id="compactHeadlineClip-{{ ad_card_x }}">
+      <rect x="{{ ad_card_x + 12 }}" y="38" width="212" height="28"/>
+    </clipPath>
+  </defs>
+</svg>

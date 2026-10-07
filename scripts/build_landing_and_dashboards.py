@@ -1,4 +1,14 @@
-<!DOCTYPE html>
+"""
+Script to build the updated index.html with:
+1. True SaaS Landing Page on tab-home (Hero, sells copy, mission statement, 2-sided marketplace, full Badge Styles & Options Gallery, 9 themes swatches, cheatsheet).
+2. Badge Studio & Snippet Generator locked behind repo owner login in tab-revenue (Maintainer Dashboard).
+3. First-class Sponsor Dashboard & Visual Login on tab-sponsors (Sponsor sign-in, brand selector, live ad preview, campaign management, deposits).
+"""
+
+import sys
+from pathlib import Path
+
+content = r'''<!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
@@ -104,10 +114,6 @@
           <i data-lucide="home" class="w-4 h-4"></i>
           <span>Home</span>
         </button>
-        <button onclick="openGrantsMissionModal()" id="nav-grants" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium text-cyan-300 hover:text-white hover:bg-cyan-500/10 border border-cyan-500/20 transition flex items-center space-x-1.5">
-          <i data-lucide="landmark" class="w-4 h-4 text-cyan-400"></i>
-          <span>Mission &amp; Grants</span>
-        </button>
         <button onclick="scrollToGallery()" id="nav-gallery" class="nav-btn px-3 py-1.5 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800/60 transition flex items-center space-x-1.5">
           <i data-lucide="sparkles" class="w-4 h-4 text-emerald-400"></i>
           <span>Badge Gallery</span>
@@ -153,302 +159,615 @@
   </header>
 
   <!-- MAIN CONTENT CONTAINER -->
-  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8">
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
     <!-- ========================================================================= -->
     <!-- TAB 1: LANDING PAGE (HERO, SELLS COPY, 2-SIDED MARKET, FULL GALLERY)      -->
     <!-- ========================================================================= -->
-    <section id="tab-home" class="tab-content space-y-10 max-w-5xl mx-auto">
-      <!-- 1. FOCUSED, BREATHING HERO -->
-      <div class="text-center pt-6 pb-2 space-y-4">
-        <!-- Category Pill -->
-        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold tracking-wide">
-          <i data-lucide="landmark" class="w-3.5 h-3.5"></i>
-          <span>Public Goods Infrastructure &middot; Grants &amp; Ecosystem Sponsorships</span>
+    <section id="tab-home" class="tab-content space-y-12">
+      <!-- HERO SECTION -->
+      <div class="text-center max-w-4xl mx-auto pt-6 pb-2 space-y-5">
+        <div class="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-xs font-semibold uppercase tracking-wider">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+          <span>Economic Empowerment Infrastructure for Independent Open-Source Developers</span>
         </div>
-
-        <!-- Punchy Headline -->
-        <h1 class="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight max-w-3xl mx-auto">
-          Paying Open-Source Devs From Day One &mdash;
-          <span class="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-cyan-300 to-accent-400">
-            With or Without Commercial Sponsors
-          </span>
+        
+        <h1 class="text-4xl sm:text-6xl font-black text-white tracking-tight leading-tight">
+          Turn Public README Traffic Into <span class="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-emerald-300 to-accent-400">Dependable Monthly Income</span>
         </h1>
-
-        <!-- Scannable 1-Paragraph Pitch -->
-        <p class="text-gray-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-          Turn public README traffic into dependable monthly income. We pair institutional foundation grants with adblock-immune dynamic badges to provide guaranteed baseline developer stipends &mdash; even before private advertisers sign up.
+        
+        <p class="text-gray-300 text-base sm:text-xl max-w-3xl mx-auto leading-relaxed">
+          Open-source software powers 97% of modern systems, but independent developers carry the burden for free. ReadmePay compiles live GitHub metadata into dynamic badges, matches tech sponsorships to your language ecosystem, splits revenue 50/50 transparently, and sends automated monthly payouts to your PayPal or crypto wallet.
         </p>
 
-        <!-- 3 High-Contrast Action CTAs -->
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-          <button onclick="loginWithGitHubForDashboard()" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-brand-600 to-emerald-500 hover:from-brand-500 hover:to-emerald-400 text-white font-bold text-sm shadow-xl shadow-brand-600/30 transition flex items-center justify-center space-x-2.5">
+        <!-- Primary Dual CTAs -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3">
+          <button onclick="loginWithGitHubForDashboard()" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-gradient-to-r from-brand-600 to-emerald-500 hover:from-brand-500 hover:to-emerald-400 text-white font-bold text-sm shadow-xl shadow-brand-600/30 transition flex items-center justify-center space-x-2.5">
             <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-            <span>Claim Repos &amp; Earn (GitHub Sign In)</span>
+            <span>Claim &amp; Monetize Repos (GitHub Sign In)</span>
           </button>
-          <button onclick="openGrantsMissionModal()" class="w-full sm:w-auto px-5 py-3 rounded-xl bg-gray-900 hover:bg-gray-800 text-cyan-300 hover:text-white border border-cyan-500/40 font-semibold text-sm transition flex items-center justify-center space-x-2">
-            <i data-lucide="landmark" class="w-4 h-4 text-cyan-400"></i>
-            <span>Grants &amp; Mission Prospectus</span>
-          </button>
-          <button onclick="switchTab('sponsors')" class="w-full sm:w-auto px-5 py-3 rounded-xl bg-gray-900/60 hover:bg-gray-800 text-accent-300 hover:text-white border border-accent-500/30 font-semibold text-sm transition flex items-center justify-center space-x-1.5">
+          <button onclick="switchTab('sponsors')" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-gray-900 hover:bg-gray-800 text-accent-300 hover:text-white border border-accent-500/40 font-bold text-sm shadow-lg transition flex items-center justify-center space-x-2">
             <i data-lucide="megaphone" class="w-4 h-4 text-accent-400"></i>
-            <span>Sponsor Devs</span>
+            <span>Sponsor Open-Source (Advertiser Hub)</span>
           </button>
         </div>
 
-        <!-- INTERACTIVE PROGRESSIVE TOOLTIP BAR (Hover/tap for full details without visual clutter) -->
-        <div class="pt-3 flex flex-wrap items-center justify-center gap-2 text-xs">
-          <!-- Tooltip 1: Zero-Mock Guarantee -->
-          <div class="relative group cursor-pointer inline-flex items-center space-x-1 px-3 py-1.5 rounded-full bg-gray-900/90 border border-gray-800 hover:border-brand-500/40 text-gray-300 transition">
-            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-brand-400"></i>
-            <span>100% Real Live GitHub Data</span>
-            <i data-lucide="help-circle" class="w-3 h-3 text-gray-500 ml-0.5"></i>
-            <!-- Popover Tooltip -->
-            <div class="absolute bottom-full mb-2.5 left-1/2 -translate-x-1/2 w-64 p-3 bg-gray-900/95 border border-brand-500/30 rounded-xl shadow-2xl text-[11px] text-gray-300 text-left pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30 backdrop-blur-md">
-              <strong class="text-white block mb-0.5 flex items-center space-x-1"><i data-lucide="shield-check" class="w-3 h-3 text-brand-400"></i><span>Zero-Mock Policy</span></strong>
-              We never inject synthetic people, mock dollar balances, or fake fiduciaries into responses. All stars, languages, and PR states are queried live from the authentic GitHub REST API.
+        <div class="pt-2 text-xs text-gray-500 flex flex-wrap items-center justify-center gap-4">
+          <span class="flex items-center space-x-1.5"><i data-lucide="check-circle" class="w-3.5 h-3.5 text-brand-400"></i><span>Zero-Mock Live GitHub REST Data</span></span>
+          <span class="flex items-center space-x-1.5"><i data-lucide="check-circle" class="w-3.5 h-3.5 text-brand-400"></i><span>Transparent 50/50 Revenue Split</span></span>
+          <span class="flex items-center space-x-1.5"><i data-lucide="check-circle" class="w-3.5 h-3.5 text-brand-400"></i><span>Automated PayPal &amp; Crypto Payouts</span></span>
+        </div>
+      </div>
+
+      <!-- TRACTION & PRINCIPLES COUNTER -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="glass-card rounded-2xl p-5 text-center space-y-1 border-brand-500/20">
+          <div class="text-3xl sm:text-4xl font-black text-brand-400">50%</div>
+          <div class="text-xs font-bold text-white uppercase tracking-wider">Direct Maintainer Share</div>
+          <div class="text-[11px] text-gray-400">Credited on every verified click</div>
+        </div>
+        <div class="glass-card rounded-2xl p-5 text-center space-y-1 border-accent-500/20">
+          <div class="text-3xl sm:text-4xl font-black text-accent-400">7</div>
+          <div class="text-xs font-bold text-white uppercase tracking-wider">Dynamic Layout Styles</div>
+          <div class="text-[11px] text-gray-400">From hero banners to Shields.io pills</div>
+        </div>
+        <div class="glass-card rounded-2xl p-5 text-center space-y-1 border-purple-500/20">
+          <div class="text-3xl sm:text-4xl font-black text-purple-400">9</div>
+          <div class="text-xs font-bold text-white uppercase tracking-wider">Developer Color Themes</div>
+          <div class="text-[11px] text-gray-400">Dracula, Nord, Cyberpunk &amp; more</div>
+        </div>
+        <div class="glass-card rounded-2xl p-5 text-center space-y-1 border-pink-500/20">
+          <div class="text-3xl sm:text-4xl font-black text-pink-400">100%</div>
+          <div class="text-xs font-bold text-white uppercase tracking-wider">Anti-Fraud Deduplication</div>
+          <div class="text-[11px] text-gray-400">Irreversible SHA-256 client audit hash</div>
+        </div>
+      </div>
+
+      <!-- TWO-SIDED MARKETPLACE EXPLANATION -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+        <!-- For Maintainers -->
+        <div class="glass-panel rounded-2xl p-6 sm:p-8 space-y-5 border-brand-500/30">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400">
+              <i data-lucide="code-2" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-white">For Independent Maintainers</h3>
+              <p class="text-xs text-brand-300">Earn monthly compensation without compromising your code</p>
             </div>
           </div>
-
-          <!-- Tooltip 2: 50/50 Revenue Split -->
-          <div class="relative group cursor-pointer inline-flex items-center space-x-1 px-3 py-1.5 rounded-full bg-gray-900/90 border border-gray-800 hover:border-emerald-500/40 text-gray-300 transition">
-            <i data-lucide="wallet" class="w-3.5 h-3.5 text-emerald-400"></i>
-            <span>Transparent 50/50 Split</span>
-            <i data-lucide="help-circle" class="w-3 h-3 text-gray-500 ml-0.5"></i>
-            <!-- Popover Tooltip -->
-            <div class="absolute bottom-full mb-2.5 left-1/2 -translate-x-1/2 w-64 p-3 bg-gray-900/95 border border-emerald-500/30 rounded-xl shadow-2xl text-[11px] text-gray-300 text-left pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30 backdrop-blur-md">
-              <strong class="text-white block mb-0.5 flex items-center space-x-1"><i data-lucide="wallet" class="w-3 h-3 text-emerald-400"></i><span>Equal Revenue Share</span></strong>
-              Every verified developer click is credited 50% directly to your maintainer balance, tracked transparently on our immutable database ledger.
+          <div class="space-y-3.5 text-xs text-gray-300">
+            <div class="flex items-start space-x-3">
+              <span class="w-5 h-5 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold text-[11px] flex-shrink-0 mt-0.5">1</span>
+              <div>
+                <strong class="text-white">One-Click GitHub OAuth Verification:</strong>
+                <p class="text-gray-400 mt-0.5">Authenticate with GitHub. We automatically discover and enroll all public repositories you own.</p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-3">
+              <span class="w-5 h-5 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold text-[11px] flex-shrink-0 mt-0.5">2</span>
+              <div>
+                <strong class="text-white">Unlock the Interactive Maintainer Studio:</strong>
+                <p class="text-gray-400 mt-0.5">Pick from 7 layout styles (Glass Banner, Linear Dark, Spotlight, Backer Pill, Goal Bar), choose your theme, and paste one line of Markdown into your README.</p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-3">
+              <span class="w-5 h-5 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold text-[11px] flex-shrink-0 mt-0.5">3</span>
+              <div>
+                <strong class="text-white">Dependable 50/50 Monthly Payouts:</strong>
+                <p class="text-gray-400 mt-0.5">Every verified click splits 50% directly to your balance. Payouts disburse automatically via PayPal MassPay or crypto.</p>
+              </div>
             </div>
           </div>
+          <div class="pt-2">
+            <button onclick="loginWithGitHubForDashboard()" class="w-full py-2.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition flex items-center justify-center space-x-2">
+              <i data-lucide="award" class="w-4 h-4"></i>
+              <span>Open Maintainer Hub &amp; Unlock Studio</span>
+            </button>
+          </div>
+        </div>
 
-          <!-- Tooltip 3: Grant-Funded Base Stipends -->
-          <div class="relative group cursor-pointer inline-flex items-center space-x-1 px-3 py-1.5 rounded-full bg-gray-900/90 border border-gray-800 hover:border-cyan-500/40 text-gray-300 transition">
-            <i data-lucide="gift" class="w-3.5 h-3.5 text-cyan-400"></i>
-            <span>Grants Guarantee Day-1 Pay</span>
-            <i data-lucide="help-circle" class="w-3 h-3 text-gray-500 ml-0.5"></i>
-            <!-- Popover Tooltip -->
-            <div class="absolute bottom-full mb-2.5 left-1/2 -translate-x-1/2 w-64 p-3 bg-gray-900/95 border border-cyan-500/30 rounded-xl shadow-2xl text-[11px] text-gray-300 text-left pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30 backdrop-blur-md">
-              <strong class="text-white block mb-0.5 flex items-center space-x-1"><i data-lucide="gift" class="w-3 h-3 text-cyan-400"></i><span>Foundation Subsidy Pool</span></strong>
-              Institutional grants from philanthropic foundations fund baseline maintainer micro-stipends so developers earn money immediately without waiting for commercial ad spend.
+        <!-- For Sponsors -->
+        <div class="glass-panel rounded-2xl p-6 sm:p-8 space-y-5 border-accent-500/30">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-accent-500/10 border border-accent-500/20 flex items-center justify-center text-accent-400">
+              <i data-lucide="megaphone" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-white">For Tech Sponsors &amp; Advertisers</h3>
+              <p class="text-xs text-accent-300">Reach thousands of active engineers where they build software</p>
             </div>
           </div>
-
-          <!-- Tooltip 4: Automated PayPal & Crypto -->
-          <div class="relative group cursor-pointer inline-flex items-center space-x-1 px-3 py-1.5 rounded-full bg-gray-900/90 border border-gray-800 hover:border-pink-500/40 text-gray-300 transition">
-            <i data-lucide="zap" class="w-3.5 h-3.5 text-pink-400"></i>
-            <span>PayPal &amp; Crypto Payouts</span>
-            <i data-lucide="help-circle" class="w-3 h-3 text-gray-500 ml-0.5"></i>
-            <!-- Popover Tooltip -->
-            <div class="absolute bottom-full mb-2.5 left-1/2 -translate-x-1/2 w-64 p-3 bg-gray-900/95 border border-pink-500/30 rounded-xl shadow-2xl text-[11px] text-gray-300 text-left pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30 backdrop-blur-md">
-              <strong class="text-white block mb-0.5 flex items-center space-x-1"><i data-lucide="zap" class="w-3 h-3 text-pink-400"></i><span>Monthly Global Settlement</span></strong>
-              Automated batch disbursements to PayPal MassPay accounts or non-custodial crypto wallets (USDC/SOL/BTC) on the 1st of every month.
+          <div class="space-y-3.5 text-xs text-gray-300">
+            <div class="flex items-start space-x-3">
+              <span class="w-5 h-5 rounded-full bg-accent-500/20 text-accent-400 flex items-center justify-center font-bold text-[11px] flex-shrink-0 mt-0.5">1</span>
+              <div>
+                <strong class="text-white">Laser-Target by Language Ecosystem:</strong>
+                <p class="text-gray-400 mt-0.5">Target developers coding in Python, Rust, TypeScript, Go, or sponsor specific flagship projects exclusively.</p>
+              </div>
             </div>
+            <div class="flex items-start space-x-3">
+              <span class="w-5 h-5 rounded-full bg-accent-500/20 text-accent-400 flex items-center justify-center font-bold text-[11px] flex-shrink-0 mt-0.5">2</span>
+              <div>
+                <strong class="text-white">Impervious to Ad-Blockers:</strong>
+                <p class="text-gray-400 mt-0.5">Badges compile natively as W3C SVG images directly inside GitHub READMEs, delivering 100% impression visibility.</p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-3">
+              <span class="w-5 h-5 rounded-full bg-accent-500/20 text-accent-400 flex items-center justify-center font-bold text-[11px] flex-shrink-0 mt-0.5">3</span>
+              <div>
+                <strong class="text-white">Verifiable Deduplicated Analytics:</strong>
+                <p class="text-gray-400 mt-0.5">Real-time CTR tracking, remaining impression budget, and instant top-ups via PayPal Checkout or USDC/Crypto.</p>
+              </div>
+            </div>
+          </div>
+          <div class="pt-2">
+            <button onclick="switchTab('sponsors')" class="w-full py-2.5 rounded-lg bg-accent-600 hover:bg-accent-500 text-white font-bold text-xs transition flex items-center justify-center space-x-2">
+              <i data-lucide="external-link" class="w-4 h-4"></i>
+              <span>Enter Sponsor Dashboard &amp; Campaigns</span>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- 2. THE INTERACTIVE BADGE CENTERPIECE (Live Proof of Value) -->
-      <div id="badge-showcase-section" class="space-y-4">
-        <div class="flex items-center justify-between">
+      <!-- ===================================================================== -->
+      <!-- COMPREHENSIVE BADGE STYLES & OPTIONS SHOWCASE (GALLERY)               -->
+      <!-- ===================================================================== -->
+      <div id="badge-showcase-section" class="pt-8 space-y-8 border-t border-gray-800">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h2 class="text-lg sm:text-xl font-bold text-white flex items-center space-x-2">
-              <i data-lucide="sparkles" class="w-4 h-4 text-brand-400"></i>
-              <span>Live Badge Studio &amp; Interactive Gallery</span>
+            <div class="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-[11px] font-semibold uppercase tracking-wider mb-2">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              <span>Visual Customization Suite</span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Badge Styles &amp; Options Gallery
             </h2>
-            <p class="text-xs text-gray-400 mt-0.5">Toggle all 7 formats &amp; 9 themes. Click copy to paste directly into your GitHub README.</p>
+            <p class="text-gray-400 text-sm mt-1 max-w-2xl">
+              Compare all 7 layout designs, 9 developer color themes, and query options. Lock in the perfect look for your repository README.
+            </p>
           </div>
-          <button onclick="openBadgeGalleryModal()" class="hidden sm:inline-flex px-3 py-1.5 rounded-lg bg-gray-900 hover:bg-gray-800 text-cyan-300 border border-cyan-500/30 text-xs font-semibold transition items-center space-x-1.5">
-            <i data-lucide="grid" class="w-3.5 h-3.5 text-cyan-400"></i>
-            <span>Side-by-Side Comparison</span>
-          </button>
+          <div class="flex items-center space-x-2 text-xs">
+            <span class="text-gray-500 font-medium">Jump to:</span>
+            <a href="#showcase-styles" class="px-2.5 py-1 rounded bg-gray-800 text-gray-300 hover:text-white border border-gray-700 transition">Styles (7)</a>
+            <a href="#showcase-themes" class="px-2.5 py-1 rounded bg-gray-800 text-gray-300 hover:text-white border border-gray-700 transition">Themes (9)</a>
+            <a href="#showcase-parameters" class="px-2.5 py-1 rounded bg-gray-800 text-gray-300 hover:text-white border border-gray-700 transition">URL Parameters</a>
+          </div>
         </div>
 
-        <!-- The Unified Interactive Stage Card -->
-        <div class="glass-panel rounded-2xl p-5 sm:p-6 space-y-4 border-gray-800 shadow-2xl glow-emerald">
-          <!-- 7 Styles Segmented Bar -->
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-gray-800 pb-3">
-            <div class="flex items-center space-x-2">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Format:</span>
-              <span id="gallery-style-label" class="text-xs font-bold text-brand-300 font-mono">Glass Banner (500x110)</span>
-            </div>
+        <!-- 7 STYLES COMPARISON GRID -->
+        <div id="showcase-styles" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-            <div class="flex items-center space-x-1 overflow-x-auto pb-1 sm:pb-0 text-xs">
-              <button onclick="selectGalleryStyle('banner')" id="gtab-banner" class="px-2.5 py-1 rounded-lg bg-brand-500/20 text-brand-300 border border-brand-500/30 font-medium transition">Banner</button>
-              <button onclick="selectGalleryStyle('linear')" id="gtab-linear" class="px-2.5 py-1 rounded-lg bg-gray-900 text-gray-400 hover:text-white border border-gray-800 transition">Linear</button>
-              <button onclick="selectGalleryStyle('spotlight')" id="gtab-spotlight" class="px-2.5 py-1 rounded-lg bg-gray-900 text-gray-400 hover:text-white border border-gray-800 transition">Spotlight</button>
-              <button onclick="selectGalleryStyle('compact')" id="gtab-compact" class="px-2.5 py-1 rounded-lg bg-gray-900 text-gray-400 hover:text-white border border-gray-800 transition">Compact</button>
-              <button onclick="selectGalleryStyle('backer')" id="gtab-backer" class="px-2.5 py-1 rounded-lg bg-gray-900 text-gray-400 hover:text-white border border-gray-800 transition">Backer</button>
-              <button onclick="selectGalleryStyle('goal')" id="gtab-goal" class="px-2.5 py-1 rounded-lg bg-gray-900 text-gray-400 hover:text-white border border-gray-800 transition">Goal</button>
-              <button onclick="selectGalleryStyle('shield')" id="gtab-shield" class="px-2.5 py-1 rounded-lg bg-gray-900 text-gray-400 hover:text-white border border-gray-800 transition">Shield.io</button>
-            </div>
-          </div>
-
-          <!-- Live Stage Viewport -->
-          <div class="p-6 bg-gray-950/90 rounded-xl border border-gray-800/80 flex items-center justify-center min-h-[140px] overflow-x-auto shadow-inner">
-            <img id="gallery-stage-img" src="/badge/tiangolo/fastapi.svg?style=banner&theme=dark" alt="Dynamic Sponsorship Badge" class="max-w-full h-auto rounded shadow-xl transition-all duration-300">
-          </div>
-
-          <!-- Stage Controls Bar -->
-          <div class="flex flex-wrap items-center justify-between gap-3 text-xs pt-1">
-            <div class="flex items-center space-x-3 flex-wrap gap-y-2">
-              <div class="flex items-center space-x-1.5">
-                <span class="text-gray-400 font-semibold">Theme:</span>
-                <select id="gallery-theme-sel" onchange="refreshGalleryStage()" class="bg-gray-900 border border-gray-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-brand-500">
-                  <option value="dark">Dark Slate</option>
-                  <option value="cyberpunk">Cyberpunk Neon</option>
-                  <option value="emerald">Emerald</option>
-                  <option value="linear">Linear Monochrome</option>
-                  <option value="dracula">Dracula</option>
-                  <option value="nord">Nord</option>
-                  <option value="monokai">Monokai</option>
-                  <option value="synthwave">Synthwave</option>
-                  <option value="light">Crisp Light</option>
-                </select>
+          <!-- Style 1: Glass Banner -->
+          <div class="glass-panel rounded-2xl p-5 border border-gray-800 hover:border-brand-500/40 transition space-y-3.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2.5">
+                <span class="w-8 h-8 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400">
+                  <i data-lucide="layout" class="w-4 h-4"></i>
+                </span>
+                <div>
+                  <h3 class="text-sm font-bold text-white">1. Glass Banner <span class="text-xs text-brand-400 font-normal">(Default)</span></h3>
+                  <p class="text-[11px] text-gray-400">Hero banner for top of README or documentation</p>
+                </div>
               </div>
-
-              <label class="flex items-center space-x-1.5 cursor-pointer text-gray-300 hover:text-white">
-                <input type="checkbox" id="gallery-chk-marquee" onchange="refreshGalleryStage()" class="rounded border-gray-700 text-brand-500 focus:ring-brand-500">
-                <span class="font-medium">Marquee Ticker</span>
-              </label>
-
-              <label class="flex items-center space-x-1.5 cursor-pointer text-gray-400 hover:text-white">
-                <input type="checkbox" id="gallery-chk-stars" onchange="refreshGalleryStage()" class="rounded border-gray-700 text-brand-500 focus:ring-brand-500">
-                <span>Hide Stars</span>
-              </label>
+              <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-gray-800 text-gray-300 border border-gray-700">500 &times; 110 px</span>
             </div>
-
-            <div class="flex items-center space-x-2">
-              <button onclick="copyGalleryMarkdown()" id="btn-gallery-copy" class="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-600 to-emerald-500 hover:from-brand-500 hover:to-emerald-400 text-white font-bold text-xs shadow-lg transition flex items-center space-x-1.5">
-                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                <span id="gallery-copy-lbl">Copy README Markdown</span>
-              </button>
-              <button onclick="openMaintainerStudio(activeGalleryStyle, document.getElementById('gallery-theme-sel').value)" class="px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-700 text-xs font-semibold transition flex items-center space-x-1">
-                <i data-lucide="sliders" class="w-3.5 h-3.5 text-brand-400"></i>
-                <span>Open in Studio</span>
-              </button>
+            <div class="p-3 bg-gray-950 rounded-xl border border-gray-800/80 overflow-x-auto flex justify-center">
+              <img src="/badge/tiangolo/fastapi.svg?style=banner&theme=dark" alt="Glass Banner Preview" class="max-w-full h-auto rounded shadow-lg">
             </div>
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-[11px] font-mono text-gray-500">?style=banner</span>
+              <div class="flex items-center space-x-2">
+                <button onclick="openMaintainerStudio('banner', 'dark')" class="px-2.5 py-1 rounded text-xs font-semibold bg-brand-500/15 hover:bg-brand-500/25 text-brand-300 border border-brand-500/30 transition flex items-center space-x-1">
+                  <i data-lucide="lock" class="w-3 h-3 text-brand-400"></i>
+                  <span>Customize in Studio</span>
+                </button>
+                <button onclick="copySnippetForStyle('banner', 'dark')" class="px-2.5 py-1 rounded text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition flex items-center space-x-1">
+                  <i data-lucide="copy" class="w-3 h-3"></i>
+                  <span>Copy Markdown</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Style 2: Neo-Brutalist Linear Dark -->
+          <div class="glass-panel rounded-2xl p-5 border border-gray-800 hover:border-purple-500/40 transition space-y-3.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2.5">
+                <span class="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                  <i data-lucide="terminal" class="w-4 h-4"></i>
+                </span>
+                <div>
+                  <h3 class="text-sm font-bold text-white">2. Neo-Brutalist / Linear Dark</h3>
+                  <p class="text-[11px] text-gray-400">Terminal typography, radial glow &amp; developer partner badge</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-gray-800 text-gray-300 border border-gray-700">500 &times; 110 px</span>
+            </div>
+            <div class="p-3 bg-gray-950 rounded-xl border border-gray-800/80 overflow-x-auto flex justify-center">
+              <img src="/badge/tiangolo/fastapi.svg?style=linear&theme=linear" alt="Linear Dark Preview" class="max-w-full h-auto rounded shadow-lg">
+            </div>
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-[11px] font-mono text-gray-500">?style=linear&amp;theme=linear</span>
+              <div class="flex items-center space-x-2">
+                <button onclick="openMaintainerStudio('linear', 'linear')" class="px-2.5 py-1 rounded text-xs font-semibold bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 transition flex items-center space-x-1">
+                  <i data-lucide="lock" class="w-3 h-3 text-purple-400"></i>
+                  <span>Customize in Studio</span>
+                </button>
+                <button onclick="copySnippetForStyle('linear', 'linear')" class="px-2.5 py-1 rounded text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition flex items-center space-x-1">
+                  <i data-lucide="copy" class="w-3 h-3"></i>
+                  <span>Copy Markdown</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Style 3: Dual-Pill Radial Spotlight -->
+          <div class="glass-panel rounded-2xl p-5 border border-gray-800 hover:border-pink-500/40 transition space-y-3.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2.5">
+                <span class="w-8 h-8 rounded-lg bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400">
+                  <i data-lucide="sparkles" class="w-4 h-4"></i>
+                </span>
+                <div>
+                  <h3 class="text-sm font-bold text-white">3. Dual-Pill Radial Spotlight</h3>
+                  <p class="text-[11px] text-gray-400">Two inset cards showcasing author stats &amp; featured sponsor</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-gray-800 text-gray-300 border border-gray-700">500 &times; 110 px</span>
+            </div>
+            <div class="p-3 bg-gray-950 rounded-xl border border-gray-800/80 overflow-x-auto flex justify-center">
+              <img src="/badge/tiangolo/fastapi.svg?style=spotlight&theme=synthwave" alt="Spotlight Preview" class="max-w-full h-auto rounded shadow-lg">
+            </div>
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-[11px] font-mono text-gray-500">?style=spotlight&amp;theme=synthwave</span>
+              <div class="flex items-center space-x-2">
+                <button onclick="openMaintainerStudio('spotlight', 'synthwave')" class="px-2.5 py-1 rounded text-xs font-semibold bg-pink-500/15 hover:bg-pink-500/25 text-pink-300 border border-pink-500/30 transition flex items-center space-x-1">
+                  <i data-lucide="lock" class="w-3 h-3 text-pink-400"></i>
+                  <span>Customize in Studio</span>
+                </button>
+                <button onclick="copySnippetForStyle('spotlight', 'synthwave')" class="px-2.5 py-1 rounded text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition flex items-center space-x-1">
+                  <i data-lucide="copy" class="w-3 h-3"></i>
+                  <span>Copy Markdown</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Style 4: Compact Micro-Card -->
+          <div class="glass-panel rounded-2xl p-5 border border-gray-800 hover:border-cyan-500/40 transition space-y-3.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2.5">
+                <span class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+                  <i data-lucide="minimize-2" class="w-4 h-4"></i>
+                </span>
+                <div>
+                  <h3 class="text-sm font-bold text-white">4. Compact Micro-Card</h3>
+                  <p class="text-[11px] text-gray-400">Streamlined single-line layout with inline sponsor chip</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-gray-800 text-gray-300 border border-gray-700">500 &times; 110 px</span>
+            </div>
+            <div class="p-3 bg-gray-950 rounded-xl border border-gray-800/80 overflow-x-auto flex justify-center">
+              <img src="/badge/tiangolo/fastapi.svg?style=compact&theme=nord" alt="Compact Preview" class="max-w-full h-auto rounded shadow-lg">
+            </div>
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-[11px] font-mono text-gray-500">?style=compact&amp;theme=nord</span>
+              <div class="flex items-center space-x-2">
+                <button onclick="openMaintainerStudio('compact', 'nord')" class="px-2.5 py-1 rounded text-xs font-semibold bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 transition flex items-center space-x-1">
+                  <i data-lucide="lock" class="w-3 h-3 text-cyan-400"></i>
+                  <span>Customize in Studio</span>
+                </button>
+                <button onclick="copySnippetForStyle('compact', 'nord')" class="px-2.5 py-1 rounded text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition flex items-center space-x-1">
+                  <i data-lucide="copy" class="w-3 h-3"></i>
+                  <span>Copy Markdown</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Style 5: Dedicated Supporter / Backer Pill -->
+          <div class="glass-panel rounded-2xl p-5 border border-gray-800 hover:border-rose-500/40 transition space-y-3.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2.5">
+                <span class="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+                  <i data-lucide="heart" class="w-4 h-4"></i>
+                </span>
+                <div>
+                  <h3 class="text-sm font-bold text-white">5. Dedicated Supporter / Backer Badge</h3>
+                  <p class="text-[11px] text-gray-400">Displays active backer or invites visitors to become project backer</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-gray-800 text-gray-300 border border-gray-700">320 &times; 28 px</span>
+            </div>
+            <div class="p-3 bg-gray-950 rounded-xl border border-gray-800/80 overflow-x-auto flex justify-center py-5">
+              <img src="/badge/tiangolo/fastapi.svg?style=backer&theme=dracula" alt="Backer Pill Preview" class="max-w-full h-auto rounded shadow-lg">
+            </div>
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-[11px] font-mono text-gray-500">?style=backer&amp;theme=dracula</span>
+              <div class="flex items-center space-x-2">
+                <button onclick="openMaintainerStudio('backer', 'dracula')" class="px-2.5 py-1 rounded text-xs font-semibold bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 transition flex items-center space-x-1">
+                  <i data-lucide="lock" class="w-3 h-3 text-rose-400"></i>
+                  <span>Customize in Studio</span>
+                </button>
+                <button onclick="copySnippetForStyle('backer', 'dracula')" class="px-2.5 py-1 rounded text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition flex items-center space-x-1">
+                  <i data-lucide="copy" class="w-3 h-3"></i>
+                  <span>Copy Markdown</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Style 6: Monthly Funding Goal Badge -->
+          <div class="glass-panel rounded-2xl p-5 border border-gray-800 hover:border-emerald-500/40 transition space-y-3.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2.5">
+                <span class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                  <i data-lucide="target" class="w-4 h-4"></i>
+                </span>
+                <div>
+                  <h3 class="text-sm font-bold text-white">6. Monthly Funding Goal Progress Bar</h3>
+                  <p class="text-[11px] text-gray-400">Crowdfunding sustainability tracker with animated progress fill</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-gray-800 text-gray-300 border border-gray-700">300 &times; 28 px</span>
+            </div>
+            <div class="p-3 bg-gray-950 rounded-xl border border-gray-800/80 overflow-x-auto flex justify-center py-5">
+              <img src="/badge/tiangolo/fastapi.svg?style=goal&theme=emerald" alt="Funding Goal Preview" class="max-w-full h-auto rounded shadow-lg">
+            </div>
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-[11px] font-mono text-gray-500">?style=goal&amp;theme=emerald</span>
+              <div class="flex items-center space-x-2">
+                <button onclick="openMaintainerStudio('goal', 'emerald')" class="px-2.5 py-1 rounded text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition flex items-center space-x-1">
+                  <i data-lucide="lock" class="w-3 h-3 text-emerald-400"></i>
+                  <span>Customize in Studio</span>
+                </button>
+                <button onclick="copySnippetForStyle('goal', 'emerald')" class="px-2.5 py-1 rounded text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition flex items-center space-x-1">
+                  <i data-lucide="copy" class="w-3 h-3"></i>
+                  <span>Copy Markdown</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Style 7: Single-Line Shield Marquee Pill (Spans Full Width on LG) -->
+          <div class="lg:col-span-2 glass-panel rounded-2xl p-5 border border-gray-800 hover:border-cyan-500/40 transition space-y-3.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2.5">
+                <span class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+                  <i data-lucide="shield" class="w-4 h-4"></i>
+                </span>
+                <div>
+                  <h3 class="text-sm font-bold text-white">7. Shields.io Single-Line Marquee Pill</h3>
+                  <p class="text-[11px] text-gray-400">Fits seamlessly into horizontal badge clusters; features smooth scrolling sponsor ticker</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-gray-800 text-gray-300 border border-gray-700">520 &times; 28 px</span>
+            </div>
+            <div class="p-3 bg-gray-950 rounded-xl border border-gray-800/80 overflow-x-auto flex justify-center py-5">
+              <img src="/badge/tiangolo/fastapi.svg?style=shield&theme=cyberpunk" alt="Shield Pill Preview" class="max-w-full h-auto rounded shadow-lg">
+            </div>
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-[11px] font-mono text-gray-500">?style=shield&amp;theme=cyberpunk</span>
+              <div class="flex items-center space-x-2">
+                <button onclick="openMaintainerStudio('shield', 'cyberpunk')" class="px-2.5 py-1 rounded text-xs font-semibold bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 transition flex items-center space-x-1">
+                  <i data-lucide="lock" class="w-3 h-3 text-cyan-400"></i>
+                  <span>Customize in Studio</span>
+                </button>
+                <button onclick="copySnippetForStyle('shield', 'cyberpunk')" class="px-2.5 py-1 rounded text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition flex items-center space-x-1">
+                  <i data-lucide="copy" class="w-3 h-3"></i>
+                  <span>Copy Markdown</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 9 THEMES INTERACTIVE SWATCH PALETTE -->
+        <div id="showcase-themes" class="glass-panel rounded-2xl p-6 sm:p-8 space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-800 pb-4">
+            <div>
+              <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+                <i data-lucide="palette" class="w-5 h-5 text-brand-400"></i>
+                <span>Supported Color Palettes (9 Themes)</span>
+              </h3>
+              <p class="text-xs text-gray-400 mt-0.5">Click any palette swatch to apply it directly to your badge preview.</p>
+            </div>
+            <span class="text-xs text-gray-500 font-mono">?theme=&lt;name&gt;</span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3">
+            <button onclick="openMaintainerStudio(currentBadgeStyle, 'dark')" class="p-3 rounded-xl bg-gray-950 border border-gray-800 hover:border-brand-500 text-left transition space-y-2 group">
+              <div class="flex space-x-1">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#111620] border border-gray-700"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#58a6ff]"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#2ea043]"></span>
+              </div>
+              <div class="text-xs font-bold text-white group-hover:text-brand-300">Dark</div>
+              <div class="text-[10px] text-gray-500">Classic Obsidian</div>
+            </button>
+
+            <button onclick="openMaintainerStudio(currentBadgeStyle, 'cyberpunk')" class="p-3 rounded-xl bg-gray-950 border border-gray-800 hover:border-pink-500 text-left transition space-y-2 group">
+              <div class="flex space-x-1">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#0d0221] border border-gray-700"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#00f0ff]"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#f43f5e]"></span>
+              </div>
+              <div class="text-xs font-bold text-white group-hover:text-pink-300">Cyberpunk</div>
+              <div class="text-[10px] text-gray-500">Neon &amp; Cyan</div>
+            </button>
+
+            <button onclick="openMaintainerStudio(currentBadgeStyle, 'emerald')" class="p-3 rounded-xl bg-gray-950 border border-gray-800 hover:border-emerald-500 text-left transition space-y-2 group">
+              <div class="flex space-x-1">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#062016] border border-gray-700"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#10b981]"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#34d399]"></span>
+              </div>
+              <div class="text-xs font-bold text-white group-hover:text-emerald-300">Emerald</div>
+              <div class="text-[10px] text-gray-500">Forest Jade</div>
+            </button>
+
+            <button onclick="openMaintainerStudio(currentBadgeStyle, 'light')" class="p-3 rounded-xl bg-gray-950 border border-gray-800 hover:border-blue-400 text-left transition space-y-2 group">
+              <div class="flex space-x-1">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#ffffff] border border-gray-400"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#0969da]"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#2da44e]"></span>
+              </div>
+              <div class="text-xs font-bold text-white group-hover:text-blue-300">Light</div>
+              <div class="text-[10px] text-gray-500">Clean White</div>
+            </button>
+
+            <button onclick="openMaintainerStudio(currentBadgeStyle, 'linear')" class="p-3 rounded-xl bg-gray-950 border border-gray-800 hover:border-purple-400 text-left transition space-y-2 group">
+              <div class="flex space-x-1">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#08090d] border border-gray-700"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#a78bfa]"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#7c3aed]"></span>
+              </div>
+              <div class="text-xs font-bold text-white group-hover:text-purple-300">Linear</div>
+              <div class="text-[10px] text-gray-500">Vercel Violet</div>
+            </button>
+
+            <button onclick="openMaintainerStudio(currentBadgeStyle, 'dracula')" class="p-3 rounded-xl bg-gray-950 border border-gray-800 hover:border-purple-300 text-left transition space-y-2 group">
+              <div class="flex space-x-1">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#282a36] border border-gray-700"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#bd93f9]"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#50fa7b]"></span>
+              </div>
+              <div class="text-xs font-bold text-white group-hover:text-purple-200">Dracula</div>
+              <div class="text-[10px] text-gray-500">Goth Neon</div>
+            </button>
+
+            <button onclick="openMaintainerStudio(currentBadgeStyle, 'nord')" class="p-3 rounded-xl bg-gray-950 border border-gray-800 hover:border-cyan-400 text-left transition space-y-2 group">
+              <div class="flex space-x-1">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#242933] border border-gray-700"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#88c0d0]"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#81a1c1]"></span>
+              </div>
+              <div class="text-xs font-bold text-white group-hover:text-cyan-300">Nord</div>
+              <div class="text-[10px] text-gray-500">Arctic Frost</div>
+            </button>
+
+            <button onclick="openMaintainerStudio(currentBadgeStyle, 'monokai')" class="p-3 rounded-xl bg-gray-950 border border-gray-800 hover:border-yellow-400 text-left transition space-y-2 group">
+              <div class="flex space-x-1">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#1e1f1c] border border-gray-700"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#66d9ef]"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#a6e22e]"></span>
+              </div>
+              <div class="text-xs font-bold text-white group-hover:text-yellow-300">Monokai</div>
+              <div class="text-[10px] text-gray-500">Charcoal Gold</div>
+            </button>
+
+            <button onclick="openMaintainerStudio(currentBadgeStyle, 'synthwave')" class="p-3 rounded-xl bg-gray-950 border border-gray-800 hover:border-pink-400 text-left transition space-y-2 group">
+              <div class="flex space-x-1">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#1a102f] border border-gray-700"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#01cdfe]"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#ff71ce]"></span>
+              </div>
+              <div class="text-xs font-bold text-white group-hover:text-pink-300">Synthwave</div>
+              <div class="text-[10px] text-gray-500">80s Sunset</div>
+            </button>
           </div>
         </div>
 
-        <!-- Collapsible URL Cheatsheet -->
-        <div class="glass-panel rounded-xl border border-gray-800 overflow-hidden">
-          <button onclick="toggleParamAccordion()" class="w-full p-3.5 text-left flex items-center justify-between text-xs font-bold text-gray-400 hover:text-white transition">
-            <div class="flex items-center space-x-2">
-              <i data-lucide="code" class="w-3.5 h-3.5 text-accent-400"></i>
-              <span>Advanced URL Parameters &amp; Query Syntax</span>
+        <!-- URL PARAMETERS & CUSTOMIZATION CHEATSHEET -->
+        <div id="showcase-parameters" class="glass-panel rounded-2xl p-6 sm:p-8 space-y-5">
+          <div class="flex items-center justify-between border-b border-gray-800 pb-4">
+            <div>
+              <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+                <i data-lucide="sliders-horizontal" class="w-5 h-5 text-accent-400"></i>
+                <span>URL Parameters &amp; Usage Cheatsheet</span>
+              </h3>
+              <p class="text-xs text-gray-400 mt-0.5">Customize any badge URL directly in your README markdown or HTML.</p>
             </div>
-            <i id="icon-param-accordion" data-lucide="chevron-down" class="w-4 h-4 text-gray-400 transition transform"></i>
-          </button>
-          <div id="param-accordion-content" class="hidden p-4 pt-0 border-t border-gray-800/60 overflow-x-auto text-xs">
-            <table class="w-full text-left text-xs mt-2">
-              <thead class="bg-gray-900 text-gray-400 uppercase font-semibold border-b border-gray-800 text-[10px]">
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-gray-900/80 text-gray-400 uppercase tracking-wider font-semibold border-b border-gray-800">
                 <tr>
-                  <th class="px-3 py-1.5">Param</th>
-                  <th class="px-3 py-1.5">Options</th>
-                  <th class="px-3 py-1.5">Default</th>
-                  <th class="px-3 py-1.5">Description</th>
+                  <th class="px-4 py-3">Parameter</th>
+                  <th class="px-4 py-3">Options</th>
+                  <th class="px-4 py-3">Default</th>
+                  <th class="px-4 py-3">What It Does</th>
+                  <th class="px-4 py-3">Example Usage</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-800 text-gray-300 text-[11px]">
+              <tbody class="divide-y divide-gray-800 text-gray-300">
                 <tr>
-                  <td class="px-3 py-1.5 font-mono text-brand-300">style</td>
-                  <td class="px-3 py-1.5 font-mono text-gray-400">banner, linear, spotlight, compact, backer, goal, shield</td>
-                  <td class="px-3 py-1.5 font-mono text-gray-400">banner</td>
-                  <td class="px-3 py-1.5">Selects 1 of 7 visual layout styles.</td>
+                  <td class="px-4 py-3 font-mono font-bold text-brand-300">style</td>
+                  <td class="px-4 py-3 font-mono text-gray-400">banner, linear, spotlight, compact, backer, goal, shield</td>
+                  <td class="px-4 py-3 font-mono text-gray-400">banner</td>
+                  <td class="px-4 py-3">Selects one of the 7 visual layouts.</td>
+                  <td class="px-4 py-3 font-mono text-gray-400">?style=linear</td>
                 </tr>
                 <tr>
-                  <td class="px-3 py-1.5 font-mono text-accent-300">theme</td>
-                  <td class="px-3 py-1.5 font-mono text-gray-400">dark, cyberpunk, emerald, linear, dracula, nord, monokai, synthwave, light</td>
-                  <td class="px-3 py-1.5 font-mono text-gray-400">dark</td>
-                  <td class="px-3 py-1.5">Switches color palette.</td>
+                  <td class="px-4 py-3 font-mono font-bold text-accent-300">theme</td>
+                  <td class="px-4 py-3 font-mono text-gray-400">dark, cyberpunk, emerald, light, linear, dracula, nord, monokai, synthwave</td>
+                  <td class="px-4 py-3 font-mono text-gray-400">dark</td>
+                  <td class="px-4 py-3">Switches color palette and gradient accents.</td>
+                  <td class="px-4 py-3 font-mono text-gray-400">?theme=dracula</td>
                 </tr>
                 <tr>
-                  <td class="px-3 py-1.5 font-mono text-pink-300">marquee</td>
-                  <td class="px-3 py-1.5 font-mono text-gray-400">true, false</td>
-                  <td class="px-3 py-1.5 font-mono text-gray-400">false</td>
-                  <td class="px-3 py-1.5">Continuous smooth scrolling ticker.</td>
+                  <td class="px-4 py-3 font-mono font-bold text-pink-300">marquee</td>
+                  <td class="px-4 py-3 font-mono text-gray-400">true, false</td>
+                  <td class="px-4 py-3 font-mono text-gray-400">false (true on shield)</td>
+                  <td class="px-4 py-3">Enables smooth right-to-left scrolling ticker on sponsor headline.</td>
+                  <td class="px-4 py-3 font-mono text-gray-400">?marquee=true</td>
                 </tr>
                 <tr>
-                  <td class="px-3 py-1.5 font-mono text-purple-300">hide_stars</td>
-                  <td class="px-3 py-1.5 font-mono text-gray-400">true, false</td>
-                  <td class="px-3 py-1.5 font-mono text-gray-400">false</td>
-                  <td class="px-3 py-1.5">Suppresses star badge count.</td>
+                  <td class="px-4 py-3 font-mono font-bold text-yellow-300">sponsor_pos</td>
+                  <td class="px-4 py-3 font-mono text-gray-400">right, left</td>
+                  <td class="px-4 py-3 font-mono text-gray-400">right</td>
+                  <td class="px-4 py-3">Flips card layout: sponsor on left, repo stats on right.</td>
+                  <td class="px-4 py-3 font-mono text-gray-400">?sponsor_pos=left</td>
+                </tr>
+                <tr>
+                  <td class="px-4 py-3 font-mono font-bold text-purple-300">hide_stars</td>
+                  <td class="px-4 py-3 font-mono text-gray-400">true, false</td>
+                  <td class="px-4 py-3 font-mono text-gray-400">false</td>
+                  <td class="px-4 py-3">Suppresses live star counter for cleaner look.</td>
+                  <td class="px-4 py-3 font-mono text-gray-400">?hide_stars=true</td>
+                </tr>
+                <tr>
+                  <td class="px-4 py-3 font-mono font-bold text-emerald-300">hide_ci</td>
+                  <td class="px-4 py-3 font-mono text-gray-400">true, false</td>
+                  <td class="px-4 py-3 font-mono text-gray-400">false</td>
+                  <td class="px-4 py-3">Suppresses CI/CD build passing pill.</td>
+                  <td class="px-4 py-3 font-mono text-gray-400">?hide_ci=true</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
+
       </div>
 
-      <!-- 3. HOW IT WORKS (3 STREAMLINED PILLARS WITH TOOLTIPS & DEEP-LINK BUTTONS) -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-        <!-- Pillar 1: Grants -->
-        <div class="glass-card rounded-2xl p-5 space-y-3 border-gray-800 hover:border-cyan-500/40 transition flex flex-col justify-between">
-          <div class="space-y-2">
-            <div class="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
-              <i data-lucide="landmark" class="w-4 h-4"></i>
-            </div>
-            <h3 class="text-sm font-bold text-white">Foundation Grants &amp; Seed Pool</h3>
-            <p class="text-xs text-gray-400 leading-relaxed">
-              Guaranteed base stipends funded by philanthropic grants so maintainers receive recurring distributions before sponsors sign up.
-            </p>
-          </div>
-          <button onclick="openGrantsMissionModal()" class="w-full py-2 rounded-lg bg-gray-900 hover:bg-gray-800 text-cyan-300 border border-cyan-500/30 text-xs font-semibold transition flex items-center justify-center space-x-1.5">
-            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-            <span>Read Grant Prospectus</span>
-          </button>
+      <!-- ETHICAL ADVERTISING & ZERO-MOCK MANIFESTO -->
+      <div class="glass-panel rounded-2xl p-6 sm:p-8 space-y-4 border-gray-800">
+        <div class="flex items-center space-x-3 text-white font-bold text-base">
+          <i data-lucide="shield-alert" class="w-5 h-5 text-brand-400"></i>
+          <span>Our Integrity Guarantee: Authentic Data Only</span>
         </div>
-
-        <!-- Pillar 2: Maintainers -->
-        <div class="glass-card rounded-2xl p-5 space-y-3 border-gray-800 hover:border-brand-500/40 transition flex flex-col justify-between">
-          <div class="space-y-2">
-            <div class="w-9 h-9 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400">
-              <i data-lucide="code-2" class="w-4 h-4"></i>
-            </div>
-            <h3 class="text-sm font-bold text-white">For Repo Maintainers</h3>
-            <p class="text-xs text-gray-400 leading-relaxed">
-              1-click GitHub OAuth auto-discovers your repos. Paste 1 line of Markdown into your README and receive automated 50% monthly payouts.
-            </p>
-          </div>
-          <button onclick="loginWithGitHubForDashboard()" class="w-full py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold transition flex items-center justify-center space-x-1.5 shadow-md">
-            <i data-lucide="award" class="w-3.5 h-3.5"></i>
-            <span>Claim Repos in Hub</span>
-          </button>
-        </div>
-
-        <!-- Pillar 3: Sponsors -->
-        <div class="glass-card rounded-2xl p-5 space-y-3 border-gray-800 hover:border-accent-500/40 transition flex flex-col justify-between">
-          <div class="space-y-2">
-            <div class="w-9 h-9 rounded-xl bg-accent-500/10 border border-accent-500/20 flex items-center justify-center text-accent-400">
-              <i data-lucide="megaphone" class="w-4 h-4"></i>
-            </div>
-            <h3 class="text-sm font-bold text-white">For Tech Sponsors</h3>
-            <p class="text-xs text-gray-400 leading-relaxed">
-              Target developers natively in GitHub READMEs by language (Python, Rust, TS, Go). 100% adblock immunity, starting from $5.
-            </p>
-          </div>
-          <button onclick="switchTab('sponsors')" class="w-full py-2 rounded-lg bg-gray-900 hover:bg-gray-800 text-accent-300 border border-accent-500/30 text-xs font-semibold transition flex items-center justify-center space-x-1.5">
-            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-            <span>Sponsor Campaign Portal</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- 4. CLEAN BOTTOM CALLOUT -->
-      <div class="glass-panel rounded-2xl p-6 sm:p-8 text-center space-y-4 glow-emerald border-brand-500/30">
-        <h3 class="text-xl sm:text-2xl font-black text-white">Ready to Monetize Your Open-Source Project?</h3>
-        <p class="text-gray-400 text-xs sm:text-sm max-w-lg mx-auto">
-          Join hundreds of developers earning monthly income from their public repositories. No contracts, 1-line setup.
+        <p class="text-xs text-gray-400 leading-relaxed">
+          ReadmePay adheres to strict data integrity standards. We never inject synthetic people, mock dollar balances, or fake fiduciaries into production responses. If county records or GitHub repos are unindexed, our endpoints fail transparently with 404 or honest status messages. Every metric in your dashboard reflects real, verifiable I/O operations.
         </p>
-        <div class="flex items-center justify-center gap-3 pt-1">
-          <button onclick="loginWithGitHubForDashboard()" class="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-lg transition flex items-center space-x-2">
+      </div>
+
+      <!-- BOTTOM CONVERSION CTA BANNER -->
+      <div class="glass-panel rounded-2xl p-8 sm:p-10 text-center space-y-5 glow-emerald border-brand-500/30">
+        <h2 class="text-3xl font-black text-white">Ready to Empower Your Open-Source Work?</h2>
+        <p class="text-gray-300 text-sm max-w-xl mx-auto">
+          Join hundreds of independent maintainers generating sustainable monthly income from their public repositories.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <button onclick="loginWithGitHubForDashboard()" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm shadow-xl transition flex items-center justify-center space-x-2">
             <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-            <span>Claim Your Repositories</span>
+            <span>Sign in with GitHub to Claim Repos</span>
           </button>
-          <button onclick="switchTab('directory')" class="px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white border border-gray-700 font-semibold text-xs transition flex items-center space-x-1.5">
-            <i data-lucide="folder-git-2" class="w-3.5 h-3.5"></i>
-            <span>Browse Directory</span>
+          <button onclick="switchTab('sponsors')" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gray-900 hover:bg-gray-800 text-accent-300 border border-accent-500/30 font-bold text-sm transition flex items-center justify-center space-x-2">
+            <i data-lucide="megaphone" class="w-4 h-4 text-accent-400"></i>
+            <span>Sponsor Open-Source Developers</span>
           </button>
         </div>
       </div>
@@ -808,47 +1127,39 @@
 
         <!-- 2-Column Sponsor Access Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          <!-- Card 1: Sponsor GitHub SSO Login -->
-          <div class="glass-panel rounded-2xl p-6 sm:p-8 space-y-5 border-accent-500/40 glow-cyan">
+          <!-- Card 1: Sponsor Login -->
+          <div class="glass-panel rounded-2xl p-6 sm:p-8 space-y-5 border-accent-500/30">
             <div class="flex items-center space-x-3">
               <div class="w-10 h-10 rounded-xl bg-accent-500/10 border border-accent-500/20 flex items-center justify-center text-accent-400">
-                <i data-lucide="shield-check" class="w-5 h-5"></i>
+                <i data-lucide="log-in" class="w-5 h-5"></i>
               </div>
               <div>
-                <h3 class="text-lg font-bold text-white">Sponsor Account Sign-In</h3>
-                <p class="text-xs text-accent-300 font-semibold flex items-center space-x-1">
-                  <i data-lucide="lock" class="w-3 h-3"></i>
-                  <span>Protected by GitHub SSO</span>
-                </p>
+                <h3 class="text-lg font-bold text-white">Sign In to Sponsor Dashboard</h3>
+                <p class="text-xs text-gray-400">Access your active campaigns, budget &amp; click analytics</p>
               </div>
             </div>
 
-            <!-- Financial Security Warning -->
-            <div class="p-3 rounded-lg bg-accent-950/40 border border-accent-500/30 text-xs text-gray-300 space-y-1.5">
-              <div class="flex items-center space-x-1.5 font-bold text-accent-300 text-[11px] uppercase tracking-wider">
-                <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
-                <span>Financial Account Protection</span>
-              </div>
-              <p class="text-[11px] text-gray-400 leading-relaxed">
-                Because sponsor accounts manage real financial deposits, PayPal orders, and crypto invoices, accounts require authentic GitHub Single Sign-On (SSO).
-              </p>
-            </div>
-
-            <div class="space-y-3 text-xs">
+            <form onsubmit="handleSponsorLoginForm(event)" class="space-y-4 text-xs">
               <div>
-                <label class="block font-semibold text-gray-300 mb-1">Company or Brand Name <span class="text-gray-500 font-normal">(Optional, will auto-bind to your GitHub)</span></label>
-                <input type="text" id="input-sponsor-company" placeholder="Your Brand or Organization" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-accent-500">
+                <label class="block font-semibold text-gray-300 mb-1">Company or Brand Name <span class="text-rose-400">*</span></label>
+                <input type="text" id="input-sponsor-name" required placeholder="e.g. Supabase, Neon, Datadog" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-accent-500">
               </div>
 
-              <button onclick="loginSponsorWithGitHub()" id="btn-sponsor-github-login" class="w-full py-3.5 rounded-lg bg-gradient-to-r from-accent-600 to-cyan-500 hover:from-accent-500 hover:to-cyan-400 text-white font-bold text-xs transition flex items-center justify-center space-x-2.5 shadow-lg shadow-accent-600/30">
-                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-                <span>Sign in with GitHub SSO as Sponsor</span>
+              <!-- Quick Demo Login Pills -->
+              <div class="space-y-1.5 pt-1">
+                <span class="text-[11px] text-gray-500 font-medium">Quick Access (Existing Sponsors):</span>
+                <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                  <button type="button" onclick="quickSponsorLogin('Supabase')" class="px-2 py-0.5 rounded text-[11px] bg-gray-800 hover:bg-accent-900/40 text-gray-300 hover:text-accent-300 border border-gray-700 transition">Supabase</button>
+                  <button type="button" onclick="quickSponsorLogin('Neon')" class="px-2 py-0.5 rounded text-[11px] bg-gray-800 hover:bg-accent-900/40 text-gray-300 hover:text-accent-300 border border-gray-700 transition">Neon</button>
+                  <button type="button" onclick="quickSponsorLogin('Pinecone')" class="px-2 py-0.5 rounded text-[11px] bg-gray-800 hover:bg-accent-900/40 text-gray-300 hover:text-accent-300 border border-gray-700 transition">Pinecone</button>
+                </div>
+              </div>
+
+              <button type="submit" id="btn-sponsor-login" class="w-full py-3 rounded-lg bg-accent-600 hover:bg-accent-500 text-white font-bold text-xs transition flex items-center justify-center space-x-2 shadow-lg shadow-accent-600/20">
+                <i data-lucide="log-in" class="w-4 h-4"></i>
+                <span>Sign In to Sponsor Dashboard</span>
               </button>
-
-              <p class="text-[11px] text-gray-400 text-center pt-1">
-                Authenticates via GitHub OAuth. No synthetic passwords or mock accounts.
-              </p>
-            </div>
+            </form>
           </div>
 
           <!-- Card 2: Launch Campaign -->
@@ -896,17 +1207,13 @@
       <!-- 2. SPONSOR AUTHENTICATED DASHBOARD (Shown when sponsor is signed in) -->
       <div id="sponsor-authenticated-view" class="hidden space-y-8">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-5">
-          <div class="flex items-center space-x-3.5">
-            <img id="auth-sponsor-avatar" src="" alt="Sponsor Avatar" class="w-12 h-12 rounded-xl border border-accent-500/30 object-cover hidden">
-            <div>
-              <div class="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-accent-500/10 border border-accent-500/20 text-accent-400 text-[11px] font-semibold uppercase tracking-wider mb-1">
-                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
-                <span>Active Sponsor: <span id="auth-sponsor-name" class="font-bold text-white">CompanyName</span></span>
-                <span id="auth-sponsor-github-badge" class="hidden text-gray-400 text-[10px] pl-1 font-mono">(@<span id="auth-sponsor-github-user"></span>)</span>
-              </div>
-              <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Sponsor Campaign Dashboard</h2>
-              <p class="text-gray-400 text-xs sm:text-sm mt-0.5">Manage impression balances, inspect verified developer click metrics, and fund your campaigns.</p>
+          <div>
+            <div class="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-accent-500/10 border border-accent-500/20 text-accent-400 text-[11px] font-semibold uppercase tracking-wider mb-1">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+              <span>Active Sponsor: <span id="auth-sponsor-name" class="font-bold text-white">CompanyName</span></span>
             </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Sponsor Campaign Dashboard</h2>
+            <p class="text-gray-400 text-xs sm:text-sm mt-0.5">Manage impression balances, inspect verified developer click metrics, and fund your campaigns.</p>
           </div>
 
           <div class="flex items-center space-x-2">
@@ -995,17 +1302,6 @@
         </div>
       </div>
 
-      <!-- Quick Language Filter Pills -->
-      <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 text-xs">
-        <span class="text-gray-500 font-semibold text-[11px] uppercase tracking-wider mr-1">Filter:</span>
-        <button onclick="filterDirectoryByLang('all')" id="dir-lang-all" class="dir-lang-btn px-2.5 py-1 rounded-lg bg-brand-500/20 text-brand-300 border border-brand-500/30 font-medium transition">All Repos</button>
-        <button onclick="filterDirectoryByLang('Python')" id="dir-lang-python" class="dir-lang-btn px-2.5 py-1 rounded-lg bg-gray-900 text-gray-400 hover:text-white border border-gray-800 transition">Python</button>
-        <button onclick="filterDirectoryByLang('TypeScript')" id="dir-lang-typescript" class="dir-lang-btn px-2.5 py-1 rounded-lg bg-gray-900 text-gray-400 hover:text-white border border-gray-800 transition">TypeScript / JS</button>
-        <button onclick="filterDirectoryByLang('Rust')" id="dir-lang-rust" class="dir-lang-btn px-2.5 py-1 rounded-lg bg-gray-900 text-gray-400 hover:text-white border border-gray-800 transition">Rust</button>
-        <button onclick="filterDirectoryByLang('Go')" id="dir-lang-go" class="dir-lang-btn px-2.5 py-1 rounded-lg bg-gray-900 text-gray-400 hover:text-white border border-gray-800 transition">Go</button>
-        <button onclick="filterDirectoryByLang('claimed')" id="dir-lang-claimed" class="dir-lang-btn px-2.5 py-1 rounded-lg bg-gray-900 text-gray-400 hover:text-white border border-gray-800 transition">Claimed Only</button>
-      </div>
-
       <div class="glass-panel rounded-2xl overflow-hidden border border-gray-800">
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
@@ -1036,7 +1332,6 @@
         <span>ReadmePay &mdash; Economic Empowerment Infrastructure for Independent Open-Source Developers.</span>
       </div>
       <div class="flex items-center space-x-4">
-        <button onclick="openGrantsMissionModal()" class="text-cyan-400 hover:text-cyan-300 transition font-medium flex items-center space-x-1"><i data-lucide="landmark" class="w-3.5 h-3.5"></i><span>Public Goods &amp; Grants</span></button>
         <button onclick="openModal('privacy')" class="hover:text-gray-300 transition">Privacy Policy</button>
         <button onclick="openModal('terms')" class="hover:text-gray-300 transition">Terms of Service</button>
         <button onclick="openModal('security')" class="hover:text-gray-300 transition">Security Disclosure</button>
@@ -1061,12 +1356,12 @@
       <form id="form-create-campaign" onsubmit="submitNewCampaign(event)" class="p-6 overflow-y-auto space-y-4 text-xs">
         <div>
           <label class="block font-semibold text-gray-300 mb-1">Company / Product Name <span class="text-rose-400">*</span></label>
-          <input type="text" id="ad-sponsor-name" required placeholder="e.g. Acme Cloud, DevCorp" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-500">
+          <input type="text" id="ad-sponsor-name" required placeholder="e.g. Supabase, Datadog, Neon" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-500">
         </div>
 
         <div>
           <label class="block font-semibold text-gray-300 mb-1">Headline Pitch <span class="text-rose-400">*</span></label>
-          <input type="text" id="ad-headline" required placeholder="e.g. High-performance developer tools for engineering teams" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-500">
+          <input type="text" id="ad-headline" required placeholder="e.g. Serverless Postgres with instant branching" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-500">
           <p class="text-[11px] text-gray-500 mt-1">Short, punchy pitch displayed inside the README badge ad card.</p>
         </div>
 
@@ -1136,507 +1431,6 @@
           </button>
         </div>
       </form>
-    </div>
-  </div>
-
-  <!-- EDIT AD CAMPAIGN MODAL -->
-  <div id="modal-edit-campaign" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-gray-900 border border-gray-700 rounded-2xl max-w-xl w-full max-h-[90vh] flex flex-col shadow-2xl">
-      <div class="p-6 border-b border-gray-800 flex items-center justify-between">
-        <div class="flex items-center space-x-2 text-white font-bold text-base">
-          <i data-lucide="edit-3" class="w-5 h-5 text-accent-400"></i>
-          <span>Edit Ad Campaign &amp; Creative</span>
-        </div>
-        <button onclick="closeEditCampaignModal()" class="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-gray-800 transition">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <form id="form-edit-campaign" onsubmit="submitEditCampaign(event)" class="p-6 overflow-y-auto space-y-4 text-xs">
-        <input type="hidden" id="edit-ad-id">
-
-        <div>
-          <label class="block font-semibold text-gray-300 mb-1">Company / Brand Name</label>
-          <input type="text" id="edit-ad-sponsor-name" disabled class="w-full bg-gray-950/50 border border-gray-800 rounded-lg px-3 py-2 text-xs text-gray-400 cursor-not-allowed">
-        </div>
-
-        <div>
-          <label class="block font-semibold text-gray-300 mb-1">Headline Pitch <span class="text-rose-400">*</span></label>
-          <input type="text" id="edit-ad-headline" required minlength="5" placeholder="Short ad pitch" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-accent-500">
-          <p class="text-[11px] text-gray-500 mt-1">This text renders directly inside open-source README badges.</p>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block font-semibold text-gray-300 mb-1">Target Language <span class="text-rose-400">*</span></label>
-            <select id="edit-ad-target-lang" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accent-500">
-              <option value="General">All Languages (General Fallback)</option>
-              <option value="Python">Python</option>
-              <option value="TypeScript">TypeScript / JavaScript</option>
-              <option value="Rust">Rust</option>
-              <option value="Go">Go (Golang)</option>
-              <option value="Java">Java / Kotlin</option>
-              <option value="C++">C / C++</option>
-            </select>
-          </div>
-          <div>
-            <label class="block font-semibold text-gray-300 mb-1">Cost Per Click Bid ($)</label>
-            <input type="number" id="edit-ad-cpc" min="0.10" step="0.05" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-accent-500">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block font-semibold text-gray-300 mb-1">Destination Click URL <span class="text-rose-400">*</span></label>
-            <input type="url" id="edit-ad-click-url" required minlength="10" placeholder="https://example.com/signup" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-accent-500">
-          </div>
-          <div>
-            <label class="block font-semibold text-gray-300 mb-1">Button Call to Action <span class="text-rose-400">*</span></label>
-            <input type="text" id="edit-ad-cta-text" required minlength="2" placeholder="e.g. Try Free" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-accent-500">
-          </div>
-        </div>
-
-        <div class="p-3 rounded-lg bg-gray-950/60 border border-gray-800 flex items-center justify-between">
-          <div>
-            <strong class="text-white block text-xs">Campaign Delivery Status</strong>
-            <span class="text-[11px] text-gray-400">Toggle active ad rotation across README badges.</span>
-          </div>
-          <label class="flex items-center space-x-2 cursor-pointer">
-            <input type="checkbox" id="edit-ad-is-active" class="rounded border-gray-700 text-brand-500 focus:ring-brand-500">
-            <span class="text-xs font-semibold text-white">Active</span>
-          </label>
-        </div>
-
-        <div id="edit-campaign-status" class="hidden text-xs p-3 rounded-lg"></div>
-
-        <div class="pt-4 border-t border-gray-800 flex items-center justify-end space-x-3">
-          <button type="button" onclick="closeEditCampaignModal()" class="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold transition">Cancel</button>
-          <button type="submit" id="btn-save-edit-campaign" class="px-5 py-2 rounded-lg bg-accent-600 hover:bg-accent-500 text-white font-bold text-xs shadow-lg transition flex items-center space-x-1.5">
-            <i data-lucide="check" class="w-4 h-4"></i>
-            <span>Save Ad Changes</span>
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- BADGE COMPARISON GALLERY MODAL (ALL 7 STYLES SIDE-BY-SIDE) -->
-  <div id="modal-badge-gallery" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-gray-900 border border-gray-700 rounded-2xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl">
-      <div class="p-5 sm:p-6 border-b border-gray-800 flex items-center justify-between">
-        <div>
-          <div class="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-[10px] font-semibold uppercase tracking-wider mb-1">
-            <i data-lucide="sparkles" class="w-3 h-3"></i>
-            <span>Interactive Visual System</span>
-          </div>
-          <h3 class="text-xl font-extrabold text-white">All 7 Badge Layout Formats</h3>
-          <p class="text-xs text-gray-400 mt-0.5">Engineered for every README aesthetic &mdash; from minimalist compact pills to rich sponsor banners.</p>
-        </div>
-        <button onclick="closeBadgeGalleryModal()" class="text-gray-400 hover:text-white p-1.5 rounded-lg hover:bg-gray-800 transition">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <div class="p-6 overflow-y-auto space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <!-- Style 1: Glass Banner -->
-          <div class="glass-card rounded-xl p-4 space-y-3 border-gray-800 hover:border-brand-500/40 transition">
-            <div class="flex items-center justify-between">
-              <div>
-                <h4 class="text-sm font-bold text-white flex items-center space-x-1.5">
-                  <i data-lucide="layout" class="w-4 h-4 text-brand-400"></i>
-                  <span>1. Glass Banner</span>
-                </h4>
-                <p class="text-[11px] text-gray-400">Flagship hero banner with live repo stats & sponsor creative.</p>
-              </div>
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-800 text-brand-300 border border-gray-700">500x110</span>
-            </div>
-            <div class="bg-gray-950 p-3 rounded-lg border border-gray-800 flex items-center justify-center overflow-x-auto">
-              <img src="/badge/tiangolo/fastapi.svg?style=banner&theme=dark" alt="Glass Banner" class="max-w-full h-auto rounded shadow">
-            </div>
-            <div class="flex items-center justify-between pt-1">
-              <span class="text-[11px] text-gray-500">Placement: Top of README</span>
-              <button onclick="copySnippetForStyle('banner')" class="px-2.5 py-1 rounded bg-brand-500/20 hover:bg-brand-500/30 text-brand-300 text-[11px] font-semibold border border-brand-500/30 transition flex items-center space-x-1">
-                <i data-lucide="copy" class="w-3 h-3"></i>
-                <span>Copy Markdown</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Style 2: Linear Dark -->
-          <div class="glass-card rounded-xl p-4 space-y-3 border-gray-800 hover:border-brand-500/40 transition">
-            <div class="flex items-center justify-between">
-              <div>
-                <h4 class="text-sm font-bold text-white flex items-center space-x-1.5">
-                  <i data-lucide="terminal" class="w-4 h-4 text-purple-400"></i>
-                  <span>2. Linear Dark</span>
-                </h4>
-                <p class="text-[11px] text-gray-400">Sleek developer bar with clean geometric typography.</p>
-              </div>
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-800 text-purple-300 border border-gray-700">460x52</span>
-            </div>
-            <div class="bg-gray-950 p-3 rounded-lg border border-gray-800 flex items-center justify-center overflow-x-auto">
-              <img src="/badge/tiangolo/fastapi.svg?style=linear&theme=dark" alt="Linear Dark" class="max-w-full h-auto rounded shadow">
-            </div>
-            <div class="flex items-center justify-between pt-1">
-              <span class="text-[11px] text-gray-500">Placement: Header or Badges Bar</span>
-              <button onclick="copySnippetForStyle('linear')" class="px-2.5 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 text-[11px] font-semibold border border-purple-500/30 transition flex items-center space-x-1">
-                <i data-lucide="copy" class="w-3 h-3"></i>
-                <span>Copy Markdown</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Style 3: Spotlight -->
-          <div class="glass-card rounded-xl p-4 space-y-3 border-gray-800 hover:border-brand-500/40 transition">
-            <div class="flex items-center justify-between">
-              <div>
-                <h4 class="text-sm font-bold text-white flex items-center space-x-1.5">
-                  <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
-                  <span>3. Spotlight</span>
-                </h4>
-                <p class="text-[11px] text-gray-400">High-contrast sponsor shoutout card with glowing accents.</p>
-              </div>
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-800 text-amber-300 border border-gray-700">420x96</span>
-            </div>
-            <div class="bg-gray-950 p-3 rounded-lg border border-gray-800 flex items-center justify-center overflow-x-auto">
-              <img src="/badge/tiangolo/fastapi.svg?style=spotlight&theme=dark" alt="Spotlight" class="max-w-full h-auto rounded shadow">
-            </div>
-            <div class="flex items-center justify-between pt-1">
-              <span class="text-[11px] text-gray-500">Placement: Sponsors section</span>
-              <button onclick="copySnippetForStyle('spotlight')" class="px-2.5 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[11px] font-semibold border border-amber-500/30 transition flex items-center space-x-1">
-                <i data-lucide="copy" class="w-3 h-3"></i>
-                <span>Copy Markdown</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Style 4: Compact Minimal -->
-          <div class="glass-card rounded-xl p-4 space-y-3 border-gray-800 hover:border-brand-500/40 transition">
-            <div class="flex items-center justify-between">
-              <div>
-                <h4 class="text-sm font-bold text-white flex items-center space-x-1.5">
-                  <i data-lucide="minimize-2" class="w-4 h-4 text-cyan-400"></i>
-                  <span>4. Compact Minimal</span>
-                </h4>
-                <p class="text-[11px] text-gray-400">Ultra-low profile single-row badge with inline sponsor tag.</p>
-              </div>
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-800 text-cyan-300 border border-gray-700">360x42</span>
-            </div>
-            <div class="bg-gray-950 p-3 rounded-lg border border-gray-800 flex items-center justify-center overflow-x-auto">
-              <img src="/badge/tiangolo/fastapi.svg?style=compact&theme=dark" alt="Compact Minimal" class="max-w-full h-auto rounded shadow">
-            </div>
-            <div class="flex items-center justify-between pt-1">
-              <span class="text-[11px] text-gray-500">Placement: Top badge row</span>
-              <button onclick="copySnippetForStyle('compact')" class="px-2.5 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-[11px] font-semibold border border-cyan-500/30 transition flex items-center space-x-1">
-                <i data-lucide="copy" class="w-3 h-3"></i>
-                <span>Copy Markdown</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Style 5: Backer Pill -->
-          <div class="glass-card rounded-xl p-4 space-y-3 border-gray-800 hover:border-brand-500/40 transition">
-            <div class="flex items-center justify-between">
-              <div>
-                <h4 class="text-sm font-bold text-white flex items-center space-x-1.5">
-                  <i data-lucide="heart" class="w-4 h-4 text-pink-400"></i>
-                  <span>5. Backer Pill</span>
-                </h4>
-                <p class="text-[11px] text-gray-400">Community backer pill with heart icon and sponsor logo.</p>
-              </div>
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-800 text-pink-300 border border-gray-700">260x36</span>
-            </div>
-            <div class="bg-gray-950 p-3 rounded-lg border border-gray-800 flex items-center justify-center overflow-x-auto">
-              <img src="/badge/tiangolo/fastapi.svg?style=backer&theme=dark" alt="Backer Pill" class="max-w-full h-auto rounded shadow">
-            </div>
-            <div class="flex items-center justify-between pt-1">
-              <span class="text-[11px] text-gray-500">Placement: Acknowledgements</span>
-              <button onclick="copySnippetForStyle('backer')" class="px-2.5 py-1 rounded bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 text-[11px] font-semibold border border-pink-500/30 transition flex items-center space-x-1">
-                <i data-lucide="copy" class="w-3 h-3"></i>
-                <span>Copy Markdown</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Style 6: Goal Progress Bar -->
-          <div class="glass-card rounded-xl p-4 space-y-3 border-gray-800 hover:border-brand-500/40 transition">
-            <div class="flex items-center justify-between">
-              <div>
-                <h4 class="text-sm font-bold text-white flex items-center space-x-1.5">
-                  <i data-lucide="target" class="w-4 h-4 text-emerald-400"></i>
-                  <span>6. Goal Progress Bar</span>
-                </h4>
-                <p class="text-[11px] text-gray-400">Monthly sponsorship funding milestone tracker with progress bar.</p>
-              </div>
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-800 text-emerald-300 border border-gray-700">340x52</span>
-            </div>
-            <div class="bg-gray-950 p-3 rounded-lg border border-gray-800 flex items-center justify-center overflow-x-auto">
-              <img src="/badge/tiangolo/fastapi.svg?style=goal&theme=dark" alt="Goal Progress Bar" class="max-w-full h-auto rounded shadow">
-            </div>
-            <div class="flex items-center justify-between pt-1">
-              <span class="text-[11px] text-gray-500">Placement: Sustaining / Backing</span>
-              <button onclick="copySnippetForStyle('goal')" class="px-2.5 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[11px] font-semibold border border-emerald-500/30 transition flex items-center space-x-1">
-                <i data-lucide="copy" class="w-3 h-3"></i>
-                <span>Copy Markdown</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Style 7: Shields.io Micro Pill -->
-          <div class="glass-card rounded-xl p-4 space-y-3 border-gray-800 hover:border-brand-500/40 transition md:col-span-2">
-            <div class="flex items-center justify-between">
-              <div>
-                <h4 class="text-sm font-bold text-white flex items-center space-x-1.5">
-                  <i data-lucide="shield" class="w-4 h-4 text-blue-400"></i>
-                  <span>7. Shields.io Compatible Micro Pill</span>
-                </h4>
-                <p class="text-[11px] text-gray-400">Seamlessly blends into standard CI build, license, and npm/PyPI shield badge rows.</p>
-              </div>
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-800 text-blue-300 border border-gray-700">180x28</span>
-            </div>
-            <div class="bg-gray-950 p-3 rounded-lg border border-gray-800 flex items-center justify-center overflow-x-auto">
-              <img src="/badge/tiangolo/fastapi.svg?style=shield&theme=dark" alt="Shields.io Pill" class="max-w-full h-auto rounded shadow">
-            </div>
-            <div class="flex items-center justify-between pt-1">
-              <span class="text-[11px] text-gray-500">Placement: Inline with build/test badges</span>
-              <button onclick="copySnippetForStyle('shield')" class="px-2.5 py-1 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 text-[11px] font-semibold border border-blue-500/30 transition flex items-center space-x-1">
-                <i data-lucide="copy" class="w-3 h-3"></i>
-                <span>Copy Markdown</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="p-4 border-t border-gray-800 flex items-center justify-between bg-gray-950/60 rounded-b-2xl">
-        <span class="text-xs text-gray-400">All badges support ?theme=, ?marquee=true, and ?sponsor_pos=left query parameters.</span>
-        <button onclick="closeBadgeGalleryModal()" class="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">Close Showcase</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- INTERACTIVE REPOSITORY PREVIEW & DIRECT ACTION MODAL -->
-  <div id="modal-repo-preview" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-gray-900 border border-gray-700 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl">
-      <div class="p-5 border-b border-gray-800 flex items-center justify-between">
-        <div>
-          <div class="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-semibold uppercase tracking-wider mb-1">
-            <i data-lucide="folder-git-2" class="w-3 h-3"></i>
-            <span>Repository Badge Inspector</span>
-          </div>
-          <h3 id="modal-repo-fullname" class="text-xl font-bold text-white font-mono">owner/repo</h3>
-          <div id="modal-repo-meta" class="flex items-center space-x-3 text-xs text-gray-400 mt-1">
-            <!-- Populated via JS -->
-          </div>
-        </div>
-        <button onclick="closeRepoPreviewModal()" class="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-gray-800 transition">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <div class="p-6 overflow-y-auto space-y-5 text-xs">
-        <!-- Style Bar inside Repo Preview Modal -->
-        <div>
-          <label class="block text-gray-400 font-semibold mb-1.5">Select Layout Format:</label>
-          <div class="flex items-center space-x-1 bg-gray-950 p-1 rounded-lg border border-gray-800 overflow-x-auto text-[11px]">
-            <button onclick="setModalRepoStyle('banner')" id="modal-rstyle-banner" class="px-2.5 py-1 rounded bg-brand-500/20 text-brand-300 font-medium">Banner</button>
-            <button onclick="setModalRepoStyle('linear')" id="modal-rstyle-linear" class="px-2.5 py-1 rounded text-gray-400 hover:text-white">Linear</button>
-            <button onclick="setModalRepoStyle('spotlight')" id="modal-rstyle-spotlight" class="px-2.5 py-1 rounded text-gray-400 hover:text-white">Spotlight</button>
-            <button onclick="setModalRepoStyle('compact')" id="modal-rstyle-compact" class="px-2.5 py-1 rounded text-gray-400 hover:text-white">Compact</button>
-            <button onclick="setModalRepoStyle('backer')" id="modal-rstyle-backer" class="px-2.5 py-1 rounded text-gray-400 hover:text-white">Backer</button>
-            <button onclick="setModalRepoStyle('goal')" id="modal-rstyle-goal" class="px-2.5 py-1 rounded text-gray-400 hover:text-white">Goal</button>
-            <button onclick="setModalRepoStyle('shield')" id="modal-rstyle-shield" class="px-2.5 py-1 rounded text-gray-400 hover:text-white">Shield</button>
-          </div>
-        </div>
-
-        <!-- Live Badge Rendering Area -->
-        <div class="p-4 bg-gray-950 rounded-xl border border-gray-800 flex items-center justify-center min-h-[120px] overflow-x-auto shadow-inner">
-          <img id="modal-repo-badge-img" src="" alt="Repository Dynamic Badge" class="max-w-full h-auto rounded shadow-lg transition">
-        </div>
-
-        <!-- Copy Markdown Box -->
-        <div>
-          <div class="flex items-center justify-between mb-1">
-            <label class="font-semibold text-gray-300">README Markdown Snippet:</label>
-            <button onclick="copyModalRepoMarkdown()" class="text-brand-400 hover:text-brand-300 font-medium flex items-center space-x-1 text-[11px]">
-              <i data-lucide="copy" class="w-3 h-3"></i>
-              <span id="modal-repo-copy-lbl">Copy Markdown</span>
-            </button>
-          </div>
-          <input type="text" id="modal-repo-markdown-input" readonly class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-xs text-gray-300 font-mono select-all focus:outline-none">
-        </div>
-
-        <!-- Action Grid: Sponsor vs Claim -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-          <button onclick="sponsorFromRepoModal()" class="w-full py-2.5 rounded-lg bg-gradient-to-r from-accent-600 to-cyan-500 hover:from-accent-500 hover:to-cyan-400 text-white font-bold text-xs transition flex items-center justify-center space-x-2 shadow-lg shadow-accent-600/20">
-            <i data-lucide="megaphone" class="w-4 h-4"></i>
-            <span>Sponsor This Repo Exclusively</span>
-          </button>
-          <button onclick="claimFromRepoModal()" class="w-full py-2.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition flex items-center justify-center space-x-2 shadow-lg shadow-brand-600/20">
-            <i data-lucide="award" class="w-4 h-4"></i>
-            <span>Claim &amp; Monetize in Studio</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MOBILE BOTTOM NAVIGATION BAR -->
-  <nav id="mobile-bottom-nav" class="fixed bottom-0 left-0 right-0 z-40 bg-gray-950/95 backdrop-blur-md border-t border-gray-800 md:hidden flex justify-around items-center py-2 px-1 text-[11px]">
-    <button onclick="switchTab('home')" id="mob-nav-home" class="flex flex-col items-center space-y-0.5 text-brand-400 font-medium px-2 py-1">
-      <i data-lucide="home" class="w-4 h-4"></i>
-      <span>Home</span>
-    </button>
-    <button onclick="openBadgeGalleryModal()" class="flex flex-col items-center space-y-0.5 text-gray-400 hover:text-white font-medium px-2 py-1">
-      <i data-lucide="sparkles" class="w-4 h-4 text-emerald-400"></i>
-      <span>Badges</span>
-    </button>
-    <button onclick="switchTab('revenue')" id="mob-nav-revenue" class="flex flex-col items-center space-y-0.5 text-gray-400 hover:text-white font-medium px-2 py-1">
-      <i data-lucide="layout-dashboard" class="w-4 h-4 text-brand-400"></i>
-      <span>Maintainers</span>
-    </button>
-    <button onclick="switchTab('sponsors')" id="mob-nav-sponsors" class="flex flex-col items-center space-y-0.5 text-gray-400 hover:text-white font-medium px-2 py-1">
-      <i data-lucide="megaphone" class="w-4 h-4 text-accent-400"></i>
-      <span>Sponsors</span>
-    </button>
-    <button onclick="switchTab('directory')" id="mob-nav-directory" class="flex flex-col items-center space-y-0.5 text-gray-400 hover:text-white font-medium px-2 py-1">
-      <i data-lucide="folder-git-2" class="w-4 h-4"></i>
-      <span>Directory</span>
-    </button>
-  </nav>
-
-  <!-- PUBLIC GOODS & INSTITUTIONAL GRANT PROSPECTUS MODAL -->
-  <div id="modal-grants-mission" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-gray-900 border border-gray-700 rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl">
-      <div class="p-5 sm:p-6 border-b border-gray-800 flex items-center justify-between">
-        <div class="space-y-1">
-          <div class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-semibold uppercase tracking-wider">
-            <i data-lucide="landmark" class="w-3.5 h-3.5"></i>
-            <span>Institutional Grant &amp; Public Goods Prospectus</span>
-          </div>
-          <h3 class="text-xl sm:text-2xl font-black text-white">ReadmePay: Sustaining the Digital Commons</h3>
-          <p class="text-xs text-gray-400">Framing and technical architecture for foundations, open-source funds, and public-interest endowments.</p>
-        </div>
-        <button onclick="closeGrantsMissionModal()" class="text-gray-400 hover:text-white p-1.5 rounded-lg hover:bg-gray-800 transition">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <div class="p-6 overflow-y-auto space-y-6 text-xs text-gray-300 leading-relaxed">
-        <!-- Section 1: The Problem -->
-        <div class="space-y-2">
-          <h4 class="text-sm font-bold text-white flex items-center space-x-2">
-            <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400"></i>
-            <span>1. The Critical Infrastructure Sustainability Deficit</span>
-          </h4>
-          <p>
-            Modern global commerce, banking, aerospace, and public infrastructure depend entirely on open-source software libraries. Over <strong>97% of modern enterprise applications</strong> run on open source. Yet the independent developers maintaining these core foundations &mdash; packaging libraries, patching zero-day vulnerabilities, maintaining documentation, and resolving issues &mdash; are burning out while working uncompensated.
-          </p>
-          <p>
-            Traditional philanthropic interventions such as tip jars and donation buttons have universally failed to provide livelihood-level stability: over <strong>94% of open-source maintainers on passive donation platforms earn under $10 per month</strong>. Maintainers are forced to treat critical digital infrastructure as an unpaid evening hobby.
-          </p>
-        </div>
-
-        <!-- Section 2: The Solution -->
-        <div class="space-y-2">
-          <h4 class="text-sm font-bold text-white flex items-center space-x-2">
-            <i data-lucide="zap" class="w-4 h-4 text-cyan-400"></i>
-            <span>2. The ReadmePay Solution: Immediate Developer Stipends Without Sponsor Dependency</span>
-          </h4>
-          <p>
-            ReadmePay was founded on a simple premise: <strong>developers should not have to wait for commercial marketing departments to realize their value before getting paid</strong>.
-          </p>
-          <p>
-            By channeling institutional grant capital directly into the <strong>Developer Seed Endowment</strong>, ReadmePay establishes a guaranteed baseline payout for verified open-source maintainers. Maintainers who claim their repository via read-only GitHub OAuth and embed a dynamic ReadmePay badge in their README immediately qualify for recurring monthly support &mdash; funded directly by grant reserves.
-          </p>
-        </div>
-
-        <!-- Section 3: Hybrid Economic Flywheel -->
-        <div class="space-y-2">
-          <h4 class="text-sm font-bold text-white flex items-center space-x-2">
-            <i data-lucide="refresh-cw" class="w-4 h-4 text-brand-400"></i>
-            <span>3. The Hybrid Grant + Commercial Sponsorship Flywheel</span>
-          </h4>
-          <p>
-            Unlike purely charitable initiatives that require permanent, recurring grant subsidies to survive, ReadmePay bridges public-interest capital with commercial advertiser liquidity:
-          </p>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-            <div class="p-3 bg-gray-950 rounded-xl border border-gray-800 space-y-1">
-              <strong class="text-white text-xs block">Phase A: Grant-Capitalized Cold Start (Current)</strong>
-              <p class="text-[11px] text-gray-400">Institutional grants capitalize the baseline developer payout pool. Enrolled developers receive consistent micro-stipends ($50 - $500+/mo) even before commercial sponsors sign up.</p>
-            </div>
-            <div class="p-3 bg-gray-950 rounded-xl border border-gray-800 space-y-1">
-              <strong class="text-white text-xs block">Phase B: Self-Sustaining Commercial Matching</strong>
-              <p class="text-[11px] text-gray-400">Commercial tech sponsors (cloud, developer tools, database vendors) buy language-targeted badge impressions. Revenue splits 50/50 with the maintainer, permanently scaling the system into economic autonomy.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Section 4: Compliance & Auditing -->
-        <div class="space-y-2">
-          <h4 class="text-sm font-bold text-white flex items-center space-x-2">
-            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
-            <span>4. Grantmaker Compliance &amp; Zero-Synthetic Data Guarantee</span>
-          </h4>
-          <p>
-            Public interest grantmakers require rigorous transparency and auditing. ReadmePay adheres to strict technical integrity standards:
-          </p>
-          <ul class="list-disc pl-5 space-y-1 text-gray-400 text-[11px]">
-            <li><strong>Zero Synthetic Mocks:</strong> All repository stars, language classifications, and maintainer handles are queried in real time from the authentic GitHub REST API v3. Non-existent repos fail transparently with 404.</li>
-            <li><strong>Anti-Fraud Click Telemetry:</strong> Every engagement is deduplicated using irreversible, salted SHA-256 client hashes (<code class="text-cyan-300">IP:User-Agent:DailySalt</code>), preventing impression spoofing and wash trading.</li>
-            <li><strong>Automated Ledger:</strong> Database ledger uses exact Decimal accounting in SQLite WAL mode. 50% maintainer distributions are exportable to PayPal MassPay and on-chain crypto batch manifests.</li>
-          </ul>
-        </div>
-
-        <!-- Section 5: Budget Allocation -->
-        <div class="space-y-2">
-          <h4 class="text-sm font-bold text-white flex items-center space-x-2">
-            <i data-lucide="pie-chart" class="w-4 h-4 text-purple-400"></i>
-            <span>5. Institutional Grant Capital Allocation Blueprint</span>
-          </h4>
-          <div class="p-3 bg-gray-950 rounded-xl border border-gray-800 flex items-center justify-between text-xs">
-            <div>
-              <span class="font-bold text-emerald-400 text-base">85%</span>
-              <span class="text-gray-300 font-semibold ml-2">Direct Developer Payout Pool</span>
-              <p class="text-[11px] text-gray-500 mt-0.5">Disbursed directly into the wallets of verified repository maintainers based on live usage metrics.</p>
-            </div>
-          </div>
-          <div class="p-3 bg-gray-950 rounded-xl border border-gray-800 flex items-center justify-between text-xs">
-            <div>
-              <span class="font-bold text-cyan-400 text-base">15%</span>
-              <span class="text-gray-300 font-semibold ml-2">Open Infrastructure &amp; Security Operations</span>
-              <p class="text-[11px] text-gray-500 mt-0.5">High-availability SVG compilation server hosting, GitHub API caching, fraud detection, and multi-rail payout maintenance.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Section 6: Contact & Inquiries -->
-        <div class="p-4 bg-cyan-950/40 rounded-xl border border-cyan-500/30 space-y-2">
-          <div class="text-white font-bold text-xs flex items-center space-x-1.5">
-            <i data-lucide="mail" class="w-4 h-4 text-cyan-400"></i>
-            <span>Grantmaker Partnership &amp; Public Goods Inquiries</span>
-          </div>
-          <p class="text-[11px] text-gray-300">
-            We actively welcome co-funding discussions with sovereign tech funds, public goods foundations, and ecosystem grants committees (Sovereign Tech Fund, NLnet, Sloan Foundation, Ford Foundation, Gitcoin, Open Source Collective, and corporate open-source offices).
-          </p>
-          <div class="flex items-center space-x-3 pt-1">
-            <a href="mailto:grants@readmepay.com" class="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-[11px] transition inline-flex items-center space-x-1.5 shadow">
-              <i data-lucide="send" class="w-3.5 h-3.5"></i>
-              <span>Email: grants@readmepay.com</span>
-            </a>
-            <button onclick="copyGrantSummary()" id="btn-copy-grant-summary" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-cyan-300 text-[11px] font-semibold border border-gray-700 transition flex items-center space-x-1.5">
-              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-              <span>Copy Grant Abstract</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="p-4 border-t border-gray-800 flex items-center justify-between bg-gray-950/60 rounded-b-2xl">
-        <span class="text-[11px] text-gray-500">ReadmePay is non-partisan public goods infrastructure designed to secure the open-source digital commons.</span>
-        <button onclick="closeGrantsMissionModal()" class="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">Close Prospectus</button>
-      </div>
     </div>
   </div>
 
@@ -1762,18 +1556,6 @@
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('tab-active'));
       const activeNav = document.getElementById(`nav-${tabId}`);
       if (activeNav) activeNav.classList.add('tab-active');
-
-      // Update mobile bottom nav active classes
-      ['home', 'revenue', 'sponsors', 'directory'].forEach(t => {
-        const mobBtn = document.getElementById(`mob-nav-${t}`);
-        if (mobBtn) {
-          if (t === tabId) {
-            mobBtn.className = 'flex flex-col items-center space-y-0.5 text-brand-400 font-medium px-2 py-1';
-          } else {
-            mobBtn.className = 'flex flex-col items-center space-y-0.5 text-gray-400 hover:text-white font-medium px-2 py-1';
-          }
-        }
-      });
 
       if (tabId === 'directory') loadDirectory();
       if (tabId === 'sponsors') loadSponsors();
@@ -2071,27 +1853,6 @@
             const navLabel = document.getElementById('nav-sponsor-label');
             if (navLabel) navLabel.innerText = `Sponsor: ${data.sponsor_name}`;
 
-            // GitHub SSO Identity details
-            const avatarImg = document.getElementById('auth-sponsor-avatar');
-            if (avatarImg) {
-              if (data.avatar_url) {
-                avatarImg.src = data.avatar_url;
-                avatarImg.classList.remove('hidden');
-              } else {
-                avatarImg.classList.add('hidden');
-              }
-            }
-            const ghBadge = document.getElementById('auth-sponsor-github-badge');
-            const ghUser = document.getElementById('auth-sponsor-github-user');
-            if (ghBadge && ghUser) {
-              if (data.github_user) {
-                ghUser.innerText = data.github_user;
-                ghBadge.classList.remove('hidden');
-              } else {
-                ghBadge.classList.add('hidden');
-              }
-            }
-
             // Update KPI summary cards
             if (data.summary) {
               const kpiCamp = document.getElementById('sp-kpi-campaigns');
@@ -2124,19 +1885,10 @@
       updateIcons();
     }
 
-    function loginSponsorWithGitHub() {
-      const comp = document.getElementById('input-sponsor-company')?.value?.trim() || '';
-      const query = comp ? `&company_name=${encodeURIComponent(comp)}` : '';
-      window.location.href = `/api/auth/github/login?role=sponsor${query}`;
-    }
-
     async function handleSponsorLoginForm(e) {
-      if (e) e.preventDefault();
-      const val = document.getElementById('input-sponsor-company')?.value?.trim();
-      if (!val) {
-        loginSponsorWithGitHub();
-        return;
-      }
+      e.preventDefault();
+      const val = document.getElementById('input-sponsor-name')?.value?.trim();
+      if (!val) return;
       await executeSponsorLogin(val);
     }
 
@@ -2215,84 +1967,10 @@
               <span>CTR: ${c.ctr}%</span>
               <span>$${c.cpc.toFixed(2)} CPC</span>
             </div>
-            <div class="pt-2 flex items-center justify-end space-x-2">
-              <button onclick='openEditCampaignModal(${JSON.stringify(c).replace(/'/g, "&#39;")})' class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-accent-600 text-gray-300 hover:text-white border border-gray-700 hover:border-accent-500 text-xs font-semibold transition flex items-center space-x-1.5 shadow">
-                <i data-lucide="edit-3" class="w-3.5 h-3.5 text-accent-400"></i>
-                <span>Edit Ad Copy</span>
-              </button>
-            </div>
           </div>
         `;
       });
       updateIcons();
-    }
-
-    function openEditCampaignModal(campaign) {
-      if (!campaign) return;
-      document.getElementById('edit-ad-id').value = campaign.id;
-      document.getElementById('edit-ad-sponsor-name').value = campaign.sponsor_name;
-      document.getElementById('edit-ad-headline').value = campaign.headline || '';
-      document.getElementById('edit-ad-cta-text').value = campaign.cta_text || 'Learn More';
-      document.getElementById('edit-ad-click-url').value = campaign.click_url || '';
-      document.getElementById('edit-ad-target-lang').value = campaign.target_language || 'General';
-      document.getElementById('edit-ad-cpc').value = campaign.cpc || 0.50;
-      document.getElementById('edit-ad-is-active').checked = campaign.is_active !== false;
-
-      const statusBox = document.getElementById('edit-campaign-status');
-      if (statusBox) statusBox.classList.add('hidden');
-
-      document.getElementById('modal-edit-campaign').classList.remove('hidden');
-      updateIcons();
-    }
-
-    function closeEditCampaignModal() {
-      document.getElementById('modal-edit-campaign').classList.add('hidden');
-    }
-
-    async function submitEditCampaign(e) {
-      e.preventDefault();
-      const id = document.getElementById('edit-ad-id').value;
-      const btn = document.getElementById('btn-save-edit-campaign');
-      const statusBox = document.getElementById('edit-campaign-status');
-
-      btn.disabled = true;
-      btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Saving...</span>`;
-      statusBox.classList.add('hidden');
-
-      const payload = {
-        headline: document.getElementById('edit-ad-headline').value.trim(),
-        call_to_action: document.getElementById('edit-ad-cta-text').value.trim(),
-        click_url: document.getElementById('edit-ad-click-url').value.trim(),
-        target_language: document.getElementById('edit-ad-target-lang').value,
-        cost_per_click: parseFloat(document.getElementById('edit-ad-cpc').value),
-        is_active: document.getElementById('edit-ad-is-active').checked,
-      };
-
-      try {
-        const res = await fetch(`/api/inventory/ads/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (res.ok) {
-          showToast(`Ad campaign #${id} updated successfully!`);
-          closeEditCampaignModal();
-          checkSponsorAuthSession();
-        } else {
-          statusBox.innerText = `Error: ${data.detail || 'Could not save changes'}`;
-          statusBox.className = 'text-xs p-3 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-300';
-          statusBox.classList.remove('hidden');
-        }
-      } catch (err) {
-        statusBox.innerText = `Network error: ${err.message}`;
-        statusBox.className = 'text-xs p-3 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-300';
-        statusBox.classList.remove('hidden');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>Save Ad Changes</span>`;
-        updateIcons();
-      }
     }
 
     async function loadPublicSponsorsCatalog() {
@@ -2303,21 +1981,6 @@
           const grid = document.getElementById('sponsors-grid');
           if (!grid) return;
           grid.innerHTML = '';
-
-          if (!data.ads || data.ads.length === 0) {
-            grid.innerHTML = `
-              <div class="col-span-full p-8 text-center glass-card rounded-xl border border-gray-800 space-y-3">
-                <i data-lucide="sparkles" class="w-8 h-8 text-accent-400 mx-auto"></i>
-                <h4 class="text-base font-bold text-white">Direct Sponsor Slots Open</h4>
-                <p class="text-xs text-gray-400 max-w-md mx-auto">Only authentic sponsors who have signed up and funded impression budgets appear here. Be the first partner to reach developers directly in open-source READMEs!</p>
-                <button onclick="openCreateCampaignModal()" class="px-4 py-2 rounded-lg bg-accent-600 hover:bg-accent-500 text-white font-bold text-xs transition">
-                  Create &amp; Launch First Campaign
-                </button>
-              </div>
-            `;
-            updateIcons();
-            return;
-          }
 
           data.ads.forEach(ad => {
             const pct = ad.total_budget > 0 ? Math.round((ad.remaining_budget / ad.total_budget) * 100) : 100;
@@ -2643,8 +2306,6 @@
       }
     }
 
-    let currentDirLang = 'all';
-
     function renderDirectoryTable(repos) {
       const tbody = document.getElementById('directory-table-body');
       if (!tbody) return;
@@ -2657,7 +2318,7 @@
 
       repos.forEach(r => {
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-gray-900/50 transition cursor-pointer';
+        tr.className = 'hover:bg-gray-900/50 transition';
         const isClaimed = r.claimed;
         tr.innerHTML = `
           <td class="px-4 py-3 font-medium text-white flex items-center space-x-2">
@@ -2671,14 +2332,10 @@
               ${isClaimed ? 'Claimed' : 'Unclaimed'}
             </span>
           </td>
-          <td class="px-4 py-3 text-right space-x-1.5 whitespace-nowrap">
-            <button onclick="openRepoPreviewModal('${r.owner}', '${r.name}', ${r.stars || 0}, '${r.primary_language || 'General'}', ${isClaimed})" class="px-2.5 py-1 rounded bg-brand-500/20 hover:bg-brand-500/30 text-brand-300 border border-brand-500/30 text-[11px] font-semibold transition inline-flex items-center space-x-1 shadow-sm">
-              <i data-lucide="sparkles" class="w-3 h-3"></i>
-              <span>Preview</span>
-            </button>
+          <td class="px-4 py-3 text-right">
             <a href="/badge/${r.full_name}.svg" target="_blank" class="px-2.5 py-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-700 text-[11px] font-semibold transition inline-flex items-center space-x-1">
-              <i data-lucide="external-link" class="w-3 h-3"></i>
-              <span>SVG</span>
+              <i data-lucide="eye" class="w-3 h-3"></i>
+              <span>View Badge</span>
             </a>
           </td>
         `;
@@ -2687,162 +2344,10 @@
       updateIcons();
     }
 
-    function filterDirectoryByLang(lang) {
-      currentDirLang = lang;
-      document.querySelectorAll('.dir-lang-btn').forEach(b => {
-        b.className = 'dir-lang-btn px-2.5 py-1 rounded-lg bg-gray-900 text-gray-400 hover:text-white border border-gray-800 transition';
-      });
-      const activeBtn = document.getElementById(`dir-lang-${lang.toLowerCase()}`);
-      if (activeBtn) {
-        activeBtn.className = 'dir-lang-btn px-2.5 py-1 rounded-lg bg-brand-500/20 text-brand-300 border border-brand-500/30 font-medium transition';
-      }
-
-      applyDirectoryFilters();
-    }
-
     function filterDirectoryTable() {
-      applyDirectoryFilters();
-    }
-
-    function applyDirectoryFilters() {
-      const q = (document.getElementById('dir-search-input')?.value || '').toLowerCase();
-      let filtered = directoryData;
-
-      if (currentDirLang === 'claimed') {
-        filtered = filtered.filter(r => r.claimed);
-      } else if (currentDirLang !== 'all') {
-        filtered = filtered.filter(r => (r.primary_language || '').toLowerCase().includes(currentDirLang.toLowerCase()));
-      }
-
-      if (q) {
-        filtered = filtered.filter(r => r.full_name.toLowerCase().includes(q) || (r.primary_language && r.primary_language.toLowerCase().includes(q)));
-      }
-
+      const q = document.getElementById('dir-search-input').value.toLowerCase();
+      const filtered = directoryData.filter(r => r.full_name.toLowerCase().includes(q) || (r.primary_language && r.primary_language.toLowerCase().includes(q)));
       renderDirectoryTable(filtered);
-    }
-
-
-    // =========================================================================
-    // MODAL BADGE GALLERY & REPOSITORY PREVIEW LOGIC
-    // =========================================================================
-    function openBadgeGalleryModal() {
-      const modal = document.getElementById('modal-badge-gallery');
-      if (modal) modal.classList.remove('hidden');
-      updateIcons();
-    }
-
-    function closeBadgeGalleryModal() {
-      const modal = document.getElementById('modal-badge-gallery');
-      if (modal) modal.classList.add('hidden');
-    }
-
-    let modalRepoOwner = 'tiangolo';
-    let modalRepoName = 'fastapi';
-    let modalRepoStyle = 'banner';
-
-    function openRepoPreviewModal(owner, name, stars, lang, claimed) {
-      modalRepoOwner = owner;
-      modalRepoName = name;
-      modalRepoStyle = 'banner';
-
-      const modal = document.getElementById('modal-repo-preview');
-      const title = document.getElementById('modal-repo-fullname');
-      const meta = document.getElementById('modal-repo-meta');
-
-      if (title) title.innerText = `${owner}/${name}`;
-      if (meta) {
-        meta.innerHTML = `
-          <span class="flex items-center space-x-1"><i data-lucide="star" class="w-3.5 h-3.5 text-yellow-400"></i><span>${(stars || 0).toLocaleString()} stars</span></span>
-          <span class="flex items-center space-x-1"><i data-lucide="code" class="w-3.5 h-3.5 text-cyan-400"></i><span>${lang || 'General'}</span></span>
-          <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${claimed ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30' : 'bg-gray-800 text-gray-400 border border-gray-700'}">${claimed ? 'Claimed' : 'Unclaimed'}</span>
-        `;
-      }
-
-      setModalRepoStyle('banner');
-      if (modal) modal.classList.remove('hidden');
-      updateIcons();
-    }
-
-    function closeRepoPreviewModal() {
-      const modal = document.getElementById('modal-repo-preview');
-      if (modal) modal.classList.add('hidden');
-    }
-
-    function setModalRepoStyle(style) {
-      modalRepoStyle = style;
-      ['banner', 'linear', 'spotlight', 'compact', 'backer', 'goal', 'shield'].forEach(s => {
-        const btn = document.getElementById(`modal-rstyle-${s}`);
-        if (btn) {
-          if (s === style) {
-            btn.className = 'px-2.5 py-1 rounded bg-brand-500/20 text-brand-300 font-medium border border-brand-500/30';
-          } else {
-            btn.className = 'px-2.5 py-1 rounded text-gray-400 hover:text-white';
-          }
-        }
-      });
-      updateModalRepoPreview();
-    }
-
-    function updateModalRepoPreview() {
-      const img = document.getElementById('modal-repo-badge-img');
-      const input = document.getElementById('modal-repo-markdown-input');
-      const base = window.location.origin;
-      const styleParam = modalRepoStyle !== 'banner' ? `?style=${modalRepoStyle}` : '';
-      const badgeUrl = `${base}/badge/${modalRepoOwner}/${modalRepoName}.svg${styleParam}`;
-      const clickUrl = `${base}/click/active/1`;
-
-      if (img) img.src = `/badge/${modalRepoOwner}/${modalRepoName}.svg${styleParam}`;
-      if (input) input.value = `[![Sponsorship Badge](${badgeUrl})](${clickUrl})`;
-    }
-
-    function copyModalRepoMarkdown() {
-      const input = document.getElementById('modal-repo-markdown-input');
-      if (!input) return;
-      navigator.clipboard.writeText(input.value).then(() => {
-        const lbl = document.getElementById('modal-repo-copy-lbl');
-        if (lbl) lbl.innerText = 'Copied!';
-        setTimeout(() => { if (lbl) lbl.innerText = 'Copy Markdown'; }, 2000);
-        showToast('Copied README badge markdown to clipboard!');
-      });
-    }
-
-    function sponsorFromRepoModal() {
-      closeRepoPreviewModal();
-      switchTab('sponsors');
-      openCreateCampaignModal();
-      const targetInput = document.getElementById('ad-target-repo');
-      if (targetInput) targetInput.value = `${modalRepoOwner}/${modalRepoName}`;
-    }
-
-    function claimFromRepoModal() {
-      closeRepoPreviewModal();
-      switchTab('revenue');
-      const oInput = document.getElementById('input-owner');
-      const rInput = document.getElementById('input-repo');
-      if (oInput) oInput.value = modalRepoOwner;
-      if (rInput) rInput.value = modalRepoName;
-      if (activeAuthUser) {
-        renderStudioBadge();
-      }
-    }
-
-    // Grants & Mission Modal
-    function openGrantsMissionModal() {
-      const modal = document.getElementById('modal-grants-mission');
-      if (modal) modal.classList.remove('hidden');
-      updateIcons();
-    }
-
-    function closeGrantsMissionModal() {
-      const modal = document.getElementById('modal-grants-mission');
-      if (modal) modal.classList.add('hidden');
-    }
-
-    function copyGrantSummary() {
-      const abstract = `ReadmePay: Public Goods Economic Infrastructure for Independent Open-Source Developers\n\nOpen-source software powers 97% of modern critical infrastructure, yet independent maintainers carry the burden without compensation. ReadmePay combines institutional foundation grants with adblock-immune dynamic README badges to disburse baseline developer stipends directly to maintainers based on authentic GitHub impact - with or without commercial sponsors.\n\nAllocation: 85% directly to verified maintainers, 15% open infrastructure and telemetry.\nURL: https://readmepay.com/grants\nContact: grants@readmepay.com`;
-      navigator.clipboard.writeText(abstract).then(() => {
-        showToast('Copied Grant Executive Abstract to clipboard!');
-      });
     }
 
     // Auto-init on load
@@ -2853,22 +2358,6 @@
       const owner = params.get('owner');
       const repo = params.get('repo');
       const claim = params.get('claim');
-
-      // Auto-detect route pathname
-      const pathname = window.location.pathname.toLowerCase();
-      if (pathname === '/grants' || pathname === '/mission' || pathname === '/about') {
-        switchTab('home');
-        setTimeout(openGrantsMissionModal, 150);
-      } else if (pathname === '/badges' || pathname === '/gallery') {
-        switchTab('home');
-        setTimeout(openBadgeGalleryModal, 150);
-      } else if (pathname === '/sponsor' || pathname === '/sponsors' || pathname === '/advertiser') {
-        switchTab('sponsors');
-      } else if (pathname === '/dashboard' || pathname === '/revenue') {
-        switchTab('revenue');
-      } else if (pathname === '/directory') {
-        switchTab('directory');
-      }
 
       if (owner && repo) {
         document.getElementById('input-owner').value = owner;
@@ -2896,89 +2385,11 @@
 
       renderStudioBadge();
     });
-  
-    // Streamlined Gallery Stage Controller
-    let activeGalleryStyle = 'banner';
-    const galleryStyleNames = {
-      banner: 'Glass Hero Banner (500x110)',
-      linear: 'Neo-Brutalist Linear Dark (500x110)',
-      spotlight: 'Dual-Pill Radial Spotlight (500x110)',
-      compact: 'Compact Minimal Strip (500x40)',
-      backer: 'Supporter Backer Pill (320x28)',
-      goal: 'Monthly Funding Goal Tracker (300x28)',
-      shield: 'Shields.io Single-Line Marquee (520x28)'
-    };
-
-    function selectGalleryStyle(style) {
-      activeGalleryStyle = style;
-      const allStyles = ['banner', 'linear', 'spotlight', 'compact', 'backer', 'goal', 'shield'];
-      allStyles.forEach(s => {
-        const btn = document.getElementById(`gtab-${s}`);
-        if (btn) {
-          if (s === style) {
-            btn.className = 'px-2.5 py-1.5 rounded-lg bg-brand-500/20 text-brand-300 border border-brand-500/30 transition';
-          } else {
-            btn.className = 'px-2.5 py-1.5 rounded-lg bg-gray-900 text-gray-400 hover:text-white border border-gray-800 transition';
-          }
-        }
-      });
-      const lbl = document.getElementById('gallery-style-label');
-      if (lbl) lbl.innerText = galleryStyleNames[style] || style;
-      refreshGalleryStage();
-    }
-
-    function refreshGalleryStage() {
-      const img = document.getElementById('gallery-stage-img');
-      if (!img) return;
-      const theme = document.getElementById('gallery-theme-sel')?.value || 'dark';
-      const marquee = document.getElementById('gallery-chk-marquee')?.checked;
-      const hideStars = document.getElementById('gallery-chk-stars')?.checked;
-
-      let q = [];
-      if (activeGalleryStyle && activeGalleryStyle !== 'banner') q.push(`style=${activeGalleryStyle}`);
-      if (theme && theme !== 'dark') q.push(`theme=${theme}`);
-      if (marquee) q.push(`marquee=true`);
-      if (hideStars) q.push(`hide_stars=true`);
-
-      const queryStr = q.length > 0 ? `?${q.join('&')}` : '';
-      img.src = `/badge/tiangolo/fastapi.svg${queryStr}`;
-    }
-
-    function copyGalleryMarkdown() {
-      const theme = document.getElementById('gallery-theme-sel')?.value || 'dark';
-      const marquee = document.getElementById('gallery-chk-marquee')?.checked;
-      const hideStars = document.getElementById('gallery-chk-stars')?.checked;
-
-      let q = [];
-      if (activeGalleryStyle && activeGalleryStyle !== 'banner') q.push(`style=${activeGalleryStyle}`);
-      if (theme && theme !== 'dark') q.push(`theme=${theme}`);
-      if (marquee) q.push(`marquee=true`);
-      if (hideStars) q.push(`hide_stars=true`);
-
-      const queryStr = q.length > 0 ? `?${q.join('&')}` : '';
-      const base = window.location.origin;
-      const badgeUrl = `${base}/badge/tiangolo/fastapi.svg${queryStr}`;
-      const clickUrl = `${base}/click/active/1`;
-      const md = `[![Sponsorship Badge](${badgeUrl})](${clickUrl})`;
-
-      navigator.clipboard.writeText(md).then(() => {
-        const lbl = document.getElementById('gallery-copy-lbl');
-        if (lbl) lbl.innerText = 'Copied to Clipboard!';
-        setTimeout(() => { if (lbl) lbl.innerText = 'Copy README Markdown'; }, 2000);
-        showToast('Copied badge Markdown snippet!');
-      });
-    }
-
-    function toggleParamAccordion() {
-      const content = document.getElementById('param-accordion-content');
-      const icon = document.getElementById('icon-param-accordion');
-      if (!content) return;
-      content.classList.toggle('hidden');
-      if (icon) {
-        icon.classList.toggle('rotate-180');
-      }
-      updateIcons();
-    }
-</script>
+  </script>
 </body>
 </html>
+'''
+
+target_path = Path("app/templates/index.html")
+target_path.write_text(content, encoding="utf-8")
+print(f"Successfully generated {target_path} ({len(content)} bytes)")

@@ -75,6 +75,11 @@ async def get_badge_svg(
     request: Request,
     background_tasks: BackgroundTasks,
     style: str = "banner",
+    theme: str = "dark",
+    marquee: bool | None = None,
+    sponsor_pos: str = "right",
+    hide_stars: bool = False,
+    hide_ci: bool = False,
     if_none_match: str | None = Header(None, alias="if-none-match"),
     db: Session = Depends(get_db),
 ):
@@ -126,17 +131,19 @@ async def get_badge_svg(
             },
         )
 
-    # 3. Sponsor campaign matching (Tier 1 language -> Tier 2 general)
+    # 3. Sponsor campaign matching (Tier 0 direct repo -> Tier 1 language -> Tier 2 general)
     matched_ad = match_ad_for_repository(
         db,
         repository.primary_language,
         allow_platform_invite=False,
+        repo_id=repository.id,
     )
 
     # 4. Construct click redirect hyperlink
     if matched_ad is not None and getattr(matched_ad, "id", None) and matched_ad.id > 0:
         click_url = f"/click/{matched_ad.id}/{repository.id}"
     else:
+        # High-leverage dynamic conversion: route direct to maintainer claim / community onboarding
         click_url = f"/maintainers/claim?repo={repository.owner}/{repository.name}"
 
     # 5. Non-blocking impression tracking via BackgroundTasks
@@ -152,7 +159,8 @@ async def get_badge_svg(
             is_camo=client_info.is_camo,
         )
 
-    # 6. Render dynamic badge SVG
+    # 6. Render dynamic badge SVG with user-selected themes, styles, and marquee options
+    effective_marquee = (style.lower() == "shield") if marquee is None else marquee
     svg_content = build_badge_svg(
         repo_name=repository.name,
         stars=repository.stars,
@@ -162,6 +170,11 @@ async def get_badge_svg(
         click_url=click_url,
         owner=repository.owner,
         style=style,
+        theme=theme,
+        marquee=effective_marquee,
+        sponsor_position=sponsor_pos,
+        hide_stars=hide_stars,
+        hide_ci=hide_ci,
     )
 
     # 7. ETag generation and HTTP 304 negotiation
@@ -186,3 +199,55 @@ async def get_badge_svg(
             "ETag": etag,
         },
     )
+
+
+@router.get("/badge/{owner}/{repo}/shield.json")
+@router.get("/api/badge/{owner}/{repo}/shield.json")
+async def get_shield_json(
+    owner: str,
+    repo: str,
+    db: Session = Depends(get_db),
+):
+    """
+    Shields.io Dynamic Endpoint v1 JSON contract.
+    Enables maintainers to embed:
+    https://img.shields.io/endpoint?url=https://readmepay.com/badge/{owner}/{repo}/shield.json
+    """
+    decoded_owner = urllib.parse.unquote(owner).strip()
+    decoded_repo = urllib.parse.unquote(repo).strip()
+
+    repository = await get_or_fetch_repository(db, decoded_owner, decoded_repo)
+    if repository is None:
+        return {
+            "schemaVersion": 1,
+            "isError": True,
+            "label": "sponsor",
+            "message": "repo not found",
+            "color": "inactive",
+        }
+
+    matched_ad = match_ad_for_repository(
+        db,
+        repository.primary_language,
+        allow_platform_invite=False,
+        repo_id=repository.id,
+    )
+
+    if matched_ad is not None and getattr(matched_ad, "id", None) and matched_ad.id > 0:
+        message_text = f"{matched_ad.sponsor_name} ⚡"
+        badge_color = "brightgreen"
+        click_link = f"https://readmepay.com/click/{matched_ad.id}/{repository.id}"
+    else:
+        message_text = "sponsor available"
+        badge_color = "blue"
+        click_link = f"https://readmepay.com/sponsor?repo={repository.owner}/{repository.name}"
+
+    return {
+        "schemaVersion": 1,
+        "label": "sponsor",
+        "message": message_text,
+        "color": badge_color,
+        "style": "flat",
+        "link": [click_link, click_link],
+    }
+

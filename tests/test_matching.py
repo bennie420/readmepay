@@ -122,3 +122,25 @@ def test_tier3_disabled_returns_none(db_session: Session):
     """Tier 3: When allow_platform_invite=False, returns None when no commercial ads exist."""
     matched = match_ad_for_repository(db_session, primary_language="Rust", allow_platform_invite=False)
     assert matched is None
+
+
+def test_tier0_dedicated_repository_sponsor(db_session: Session):
+    """Tier 0: Direct repository match (target_repo_id) takes highest precedence over language and general ads."""
+    # General ad
+    create_test_ad(db_session, sponsor_name="GeneralHost", target_language=None, cost_per_click=Decimal("0.20"))
+    # Language ad
+    create_test_ad(db_session, sponsor_name="PythonSponsor", target_language="Python", cost_per_click=Decimal("0.50"))
+    # Dedicated repo ad
+    dedicated_ad = create_test_ad(db_session, sponsor_name="FastAPISponsorVIP", target_repo_id=42, cost_per_click=Decimal("1.00"))
+
+    # When repo_id=42 is provided, dedicated ad wins
+    matched = match_ad_for_repository(db_session, primary_language="Python", repo_id=42)
+    assert matched is not None
+    assert matched.id == dedicated_ad.id
+    assert matched.sponsor_name == "FastAPISponsorVIP"
+
+    # When another repo queries (e.g. repo_id=99), language ad is served
+    matched_other = match_ad_for_repository(db_session, primary_language="Python", repo_id=99)
+    assert matched_other is not None
+    assert matched_other.sponsor_name == "PythonSponsor"
+

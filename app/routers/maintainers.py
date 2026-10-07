@@ -23,12 +23,16 @@ from app.config import settings
 from app.database import get_db
 from app.models.repository import Repository
 from app.schemas.repo import (
+    ClaimAllRequest,
     ClaimRepoRequest,
     ClaimRepoResponse,
     RepoResponse,
     SnippetResponse,
+    ToggleClaimRequest,
+    UpdatePayoutRequest,
 )
 from app.services.github_service import get_or_fetch_repository
+import httpx
 
 logger = logging.getLogger("router_maintainers")
 
@@ -339,3 +343,236 @@ async def get_repository_badge_snippet(
         badge_url=snippets["badge_url"],
         click_url=snippets["click_url"],
     )
+
+
+@router.post(
+    "/api/maintainers/toggle-claim",
+    summary="Toggle repository claim/monetization status",
+)
+async def toggle_repository_claim(
+    request: Request,
+    payload: ToggleClaimRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Allow verified maintainer to opt in or opt out of monetizing a specific repository.
+    """
+    username = request.cookies.get("readmepay_user")
+    if not username:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required. Please sign in with GitHub.",
+        )
+
+    # Locate repo by ID or owner/name
+    repo = None
+    if payload.repo_id is not None:
+        repo = db.get(Repository, payload.repo_id)
+    elif payload.owner and payload.name:
+        repo = (
+            db.query(Repository)
+            .filter(
+                func.lower(Repository.owner) == payload.owner.strip().lower(),
+                func.lower(Repository.name) == payload.name.strip().lower(),
+            )
+            .first()
+        )
+
+    if repo is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Repository not found in platform registry.",
+        )
+
+    # Verify authorization: current user must be owner or maintainer
+    is_owner = repo.owner.lower() == username.lower()
+    is_maintainer = (repo.maintainer_handle or "").lower() == username.lower()
+    is_claimer = (repo.claimed_by or "").lower() == username.lower()
+
+    if not (is_owner or is_maintainer or is_claimer):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"User @{username} is not authorized to modify settings for @{repo.owner}/{repo.name}.",
+        )
+
+    now = datetime.now(UTC)
+    repo.claimed = payload.claimed
+    if payload.claimed:
+        repo.claimed_by = repo.claimed_by or username
+        repo.maintainer_handle = repo.maintainer_handle or username
+        repo.claimed_at = repo.claimed_at or now
+    repo.updated_at = now
+
+    db.commit()
+    db.refresh(repo)
+
+    logger.info("Maintainer @%s set claim status of %s/%s to %s", username, repo.owner, repo.name, repo.claimed)
+    return {
+        "success": True,
+        "repo_id": repo.id,
+        "owner": repo.owner,
+        "name": repo.name,
+        "claimed": repo.claimed,
+        "message": f"Repository '{repo.owner}/{repo.name}' monetization is now {'active' if repo.claimed else 'paused'}.",
+    }
+
+
+@router.post(
+    "/api/maintainers/claim-all",
+    summary="Batch-claim all public repositories owned by maintainer",
+)
+async def claim_all_maintainer_repos(
+    request: Request,
+    payload: ClaimAllRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Fetch all public GitHub repositories for authenticated maintainer and auto-claim them.
+    Allows maintainers to earn revenue across their entire portfolio by default.
+    """
+    username = request.cookies.get("readmepay_user")
+    if not username:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required. Please sign in with GitHub.",
+        )
+
+    # 1. Fetch public repos from authentic GitHub API
+    user_repos = []
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        try:
+            resp = await client.get(
+                f"https://api.github.com/users/{username}/repos?per_page=100&type=owner",
+                headers={
+                    "Accept": "application/vnd.github+json",
+                    "User-Agent": "ReadmePay-Verifier/1.0",
+                },
+            )
+            if resp.status_code == 200:
+                user_repos = resp.json()
+        except Exception as exc:
+            logger.warning("Could not reach GitHub API for user repos: %s", exc)
+
+    now = datetime.now(UTC)
+    payout = payload.payout_address.strip() if payload.payout_address else None
+    claimed_count = 0
+
+    if isinstance(user_repos, list) and user_repos:
+        for r_info in user_repos:
+            if not isinstance(r_info, dict) or r_info.get("fork"):
+                continue
+            r_owner = r_info.get("owner", {}).get("login", username)
+            r_name = r_info.get("name")
+            if not r_name:
+                continue
+
+            repo = (
+                db.query(Repository)
+                .filter(
+                    func.lower(Repository.owner) == r_owner.lower(),
+                    func.lower(Repository.name) == r_name.lower(),
+                )
+                .first()
+            )
+
+            if repo is None:
+                repo = Repository(
+                    owner=r_owner,
+                    name=r_name,
+                    github_id=r_info.get("id"),
+                    description=r_info.get("description"),
+                    stars=r_info.get("stargazers_count", 0),
+                    primary_language=r_info.get("language"),
+                    ci_status="passing",
+                    claimed=True,
+                    claimed_by=username,
+                    maintainer_handle=username,
+                    payout_address=payout,
+                    claimed_at=now,
+                )
+                db.add(repo)
+                claimed_count += 1
+            else:
+                if not repo.claimed or repo.claimed_by == username or repo.owner.lower() == username.lower():
+                    repo.claimed = True
+                    repo.claimed_by = username
+                    repo.maintainer_handle = username
+                    if payout:
+                        repo.payout_address = payout
+                    repo.claimed_at = repo.claimed_at or now
+                    repo.updated_at = now
+                    claimed_count += 1
+
+    # Also claim any existing repos in our DB owned by username that were unclaimed
+    db_repos = (
+        db.query(Repository)
+        .filter(func.lower(Repository.owner) == username.lower())
+        .all()
+    )
+    for r in db_repos:
+        if not r.claimed:
+            r.claimed = True
+            r.claimed_by = username
+            r.maintainer_handle = username
+            if payout and not r.payout_address:
+                r.payout_address = payout
+            r.claimed_at = r.claimed_at or now
+            r.updated_at = now
+            claimed_count += 1
+
+    db.commit()
+    logger.info("Maintainer @%s claimed %d repositories in batch.", username, claimed_count)
+
+    return {
+        "success": True,
+        "username": username,
+        "claimed_count": claimed_count,
+        "message": f"Successfully enrolled {claimed_count} public repositories under @{username}!",
+    }
+
+
+@router.post(
+    "/api/maintainers/update-payout",
+    summary="Update payout address across all claimed repositories",
+)
+async def update_maintainer_payout(
+    request: Request,
+    payload: UpdatePayoutRequest,
+    db: Session = Depends(get_db),
+):
+    """Update payout destination (PayPal or Crypto) for all claimed repositories."""
+    username = request.cookies.get("readmepay_user")
+    if not username:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required. Please sign in with GitHub.",
+        )
+
+    clean_payout = payload.payout_address.strip()
+    if not clean_payout:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Payout address cannot be empty.",
+        )
+
+    updated_rows = (
+        db.query(Repository)
+        .filter(
+            (func.lower(Repository.maintainer_handle) == username.lower())
+            | (func.lower(Repository.claimed_by) == username.lower())
+            | (func.lower(Repository.owner) == username.lower())
+        )
+        .update(
+            {Repository.payout_address: clean_payout, Repository.updated_at: datetime.now(UTC)},
+            synchronize_session="fetch",
+        )
+    )
+    db.commit()
+
+    return {
+        "success": True,
+        "payout_address": clean_payout,
+        "updated_repositories": updated_rows,
+        "message": f"Payout address successfully updated across {updated_rows} repositories.",
+    }
+

@@ -23,6 +23,7 @@ class Ad(Base):
     call_to_action: Mapped[str] = mapped_column(String(100), nullable=False, default="Learn More")
     click_url: Mapped[str] = mapped_column(String(1024), nullable=False)
     target_language: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
+    target_repo_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
     total_budget: Mapped[Decimal] = mapped_column(
         Numeric(10, 2), nullable=False, default=Decimal("100.00")

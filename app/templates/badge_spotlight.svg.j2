@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="500"
+     height="110"
+     viewBox="0 0 500 110"
+     fill="none"
+     role="img"
+     aria-label="{{ repo_name }} sponsorship badge">
+  <style>
+    .f-sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .repo-title { font-size: 14px; font-weight: 800; fill: {{ palette.text_title | default('#38bdf8') }}; letter-spacing: -0.2px; }
+    .repo-sub { font-size: 9.5px; font-weight: 500; fill: {{ palette.text_meta | default('#94a3b8') }}; }
+    .chip-text { font-size: 9.5px; font-weight: 700; fill: {{ palette.text_meta | default('#cbd5e1') }}; }
+    .ad-card { cursor: pointer; transition: all 0.25s ease; }
+    .ad-card:hover { stroke: {{ palette.accent | default('#10b981') }}; }
+    .featured-tag { font-size: 8.5px; font-weight: 800; fill: #ffffff; letter-spacing: 0.6px; }
+    .sponsor-name { font-size: 12px; font-weight: 800; fill: #ffffff; }
+    .ad-headline { font-size: 10.5px; font-weight: 500; fill: {{ palette.text_headline | default('#e2e8f0') }}; }
+    .cta-button { cursor: pointer; }
+    .cta-text { font-size: 9.5px; font-weight: 800; fill: {{ palette.btn_text | default('#ffffff') }}; letter-spacing: 0.4px; }
+    a { cursor: pointer; text-decoration: none; }
+
+    {% if marquee %}
+    /* Smooth Continuous Sponsor Marquee */
+    @keyframes spotlight-marquee-scroll {
+      0% { transform: translateX(110px); }
+      100% { transform: translateX(-190px); }
+    }
+    .spotlight-marquee-track {
+      animation: spotlight-marquee-scroll 10s linear infinite;
+    }
+    .spotlight-marquee-track:hover {
+      animation-play-state: paused;
+    }
+    {% endif %}
+
+    @media (prefers-color-scheme: light) {
+      .outer-card { fill: #ffffff !important; stroke: #d0d7de !important; }
+      .repo-card { fill: #f6f8fa !important; stroke: #d0d7de !important; }
+      .repo-title { fill: #0969da !important; }
+      .repo-sub { fill: #57606a !important; }
+      .ad-inner-card { fill: #f0fdf4 !important; stroke: #86efac !important; }
+      .ad-headline { fill: #24292f !important; }
+      .sponsor-name { fill: #1f2328 !important; }
+    }
+  </style>
+
+  <!-- Deep Body Card -->
+  <rect class="outer-card" x="0.5" y="0.5" width="499" height="109" rx="10" fill="url(#spotlightOuterBg)" stroke="{{ palette.border | default('#1e293b') }}" stroke-width="1"/>
+  <!-- Top Highlight Accent -->
+  <line x1="12" y1="1" x2="488" y2="1" stroke="{{ palette.accent | default('#10b981') }}" stroke-opacity="0.7" stroke-width="1.2" stroke-linecap="round"/>
+
+  {% set is_sponsor_left = (sponsor_position == 'left') %}
+  {% set ad_card_x = 8 if is_sponsor_left else 256 %}
+  {% set meta_x = 256 if is_sponsor_left else 8 %}
+
+  <!-- Sponsor Spotlight Card Component -->
+  <g class="f-sans" id="sponsor-card">
+    {% if has_ad %}
+    <a href="{{ click_url }}" xlink:href="{{ click_url }}" target="_blank" rel="noopener noreferrer">
+      <!-- Elevated Spotlight Inset Card -->
+      <rect class="ad-card ad-inner-card" x="{{ ad_card_x }}" y="8" width="236" height="94" rx="8" fill="url(#spotlightAdBg)" stroke="{{ palette.accent | default('#10b981') }}" stroke-opacity="0.45" stroke-width="1"/>
+
+      <!-- Header: FEATURED Pill + Sponsor Name -->
+      <g transform="translate({{ ad_card_x + 12 }}, 18)">
+        <rect x="0" y="0" width="62" height="17" rx="8.5" fill="{{ palette.btn_bg_0 | default('#059669') }}"/>
+        <text x="31" y="11.5" text-anchor="middle" class="featured-tag">FEATURED</text>
+        <text x="70" y="12.5" class="sponsor-name">{{ sponsor_name | truncate_text(18) }}</text>
+      </g>
+
+      <!-- Headline -->
+      <g clip-path="url(#spotlightHeadlineClip-{{ ad_card_x }})">
+        {% if marquee %}
+        <g class="spotlight-marquee-track">
+          <text x="{{ ad_card_x + 12 }}" y="49" class="ad-headline">
+            <tspan>{{ headline }}</tspan>
+          </text>
+        </g>
+        {% else %}
+        <text x="{{ ad_card_x + 12 }}" y="49" class="ad-headline">
+          <tspan x="{{ ad_card_x + 12 }}" dy="0">{{ headline | truncate_text(35) }}</tspan>
+          {% if headline | length > 35 %}
+          <tspan x="{{ ad_card_x + 12 }}" dy="13.5">{{ headline[35:] | truncate_text(35) }}</tspan>
+          {% endif %}
+        </text>
+        {% endif %}
+      </g>
+
+      <!-- Vibrant Gradient Action Button -->
+      <g class="cta-button" transform="translate({{ ad_card_x + 12 }}, 73)">
+        <rect x="0" y="0" width="126" height="21" rx="5" fill="url(#spotlightBtnBg)"/>
+        <text x="63" y="14" text-anchor="middle" class="cta-text">{{ cta_text | truncate_text(15) }} &#x2192;</text>
+      </g>
+    </a>
+    {% else %}
+    <a href="{{ click_url | default('/sponsor') }}" xlink:href="{{ click_url | default('/sponsor') }}" target="_blank" rel="noopener noreferrer">
+      <rect class="ad-card ad-inner-card" x="{{ ad_card_x }}" y="8" width="236" height="94" rx="8" fill="#0d141e" stroke="{{ palette.border | default('#1e293b') }}" stroke-width="1" stroke-dasharray="3,3"/>
+      <g transform="translate({{ ad_card_x + 12 }}, 18)">
+        <rect x="0" y="0" width="62" height="17" rx="8.5" fill="#1e293b"/>
+        <text x="31" y="11.5" text-anchor="middle" class="featured-tag">AVAILABLE</text>
+        <text x="70" y="12.5" class="sponsor-name">ReadmePay</text>
+      </g>
+      <text x="{{ ad_card_x + 12 }}" y="49" class="ad-headline">Sponsor this open-source project</text>
+      <g class="cta-button" transform="translate({{ ad_card_x + 12 }}, 73)">
+        <rect x="0" y="0" width="126" height="21" rx="5" fill="#1e293b" stroke="{{ palette.border | default('#334155') }}" stroke-width="1"/>
+        <text x="63" y="14" text-anchor="middle" class="cta-text">&#x2665; SPONSOR &#x2192;</text>
+      </g>
+    </a>
+    {% endif %}
+  </g>
+
+  <!-- Left: Repository Identity Card (Elevated Inset Pill) -->
+  <g class="f-sans" id="repo-metadata">
+    <rect class="repo-card" x="{{ meta_x }}" y="8" width="236" height="94" rx="8" fill="url(#spotlightRepoBg)" stroke="{{ palette.border | default('#1e293b') }}" stroke-width="1"/>
+    
+    <g transform="translate({{ meta_x + 12 }}, 24)">
+      <text x="0" y="11" class="repo-title">{{ repo_name }}</text>
+      <text x="0" y="24" class="repo-sub">by @{{ owner or 'maintainer' }} &#8226; ReadmePay Verified</text>
+    </g>
+
+    <!-- Segmented Stats Row -->
+    <g transform="translate({{ meta_x + 12 }}, 66)">
+      {% if not hide_stars %}
+      <g transform="translate(0, 0)">
+        <rect x="0" y="0" width="66" height="20" rx="4" fill="{{ palette.card_bg_1 | default('#0f172a') }}" stroke="{{ palette.border | default('#1e293b') }}" stroke-width="0.8"/>
+        <text x="7" y="13.5" class="chip-text" fill="#facc15">&#x2605; {{ formatted_stars }}</text>
+      </g>
+      {% endif %}
+
+      {% if language %}
+      <g transform="translate({% if hide_stars %}0{% else %}72{% endif %}, 0)">
+        <rect x="0" y="0" width="68" height="20" rx="4" fill="{{ palette.card_bg_1 | default('#0f172a') }}" stroke="{{ palette.border | default('#1e293b') }}" stroke-width="0.8"/>
+        <circle cx="8" cy="10" r="3" fill="{{ lang_color }}"/>
+        <text x="16" y="13.5" class="chip-text">{{ language | truncate_text(8, '') }}</text>
+      </g>
+      {% endif %}
+
+      {% if ci_status %}
+      <g transform="translate({% if hide_stars and not language %}0{% elif hide_stars or not language %}72{% else %}146{% endif %}, 0)">
+        <rect x="0" y="0" width="58" height="20" rx="4" fill="{{ palette.card_bg_1 | default('#0f172a') }}" stroke="{{ palette.border | default('#1e293b') }}" stroke-width="0.8"/>
+        <text x="7" y="13.5" class="chip-text" fill="{{ ci_bg_color }}">&#x2713; {{ ci_status }}</text>
+      </g>
+      {% endif %}
+    </g>
+  </g>
+
+  <defs>
+    <linearGradient id="spotlightOuterBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="{{ palette.card_bg_0 | default('#0f172a') }}"/>
+      <stop offset="100%" stop-color="{{ palette.card_bg_1 | default('#020617') }}"/>
+    </linearGradient>
+    <linearGradient id="spotlightRepoBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="{{ palette.card_bg_1 | default('#1e293b') }}" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="{{ palette.card_bg_0 | default('#0f172a') }}" stop-opacity="0.8"/>
+    </linearGradient>
+    <linearGradient id="spotlightAdBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="{{ palette.ad_bg_0 | default('#064e3b') }}" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="{{ palette.ad_bg_1 | default('#022c22') }}" stop-opacity="0.55"/>
+    </linearGradient>
+    <linearGradient id="spotlightBtnBg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="{{ palette.btn_bg_0 | default('#059669') }}"/>
+      <stop offset="100%" stop-color="{{ palette.btn_bg_1 | default('#10b981') }}"/>
+    </linearGradient>
+    <clipPath id="spotlightHeadlineClip-{{ ad_card_x }}">
+      <rect x="{{ ad_card_x + 12 }}" y="38" width="212" height="28"/>
+    </clipPath>
+  </defs>
+</svg>

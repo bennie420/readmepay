@@ -182,6 +182,129 @@ def compute_svg_etag(svg_content: str) -> str:
     return f'"{digest}"'
 
 
+THEMES = {
+    "dark": {
+        "card_bg_0": "#111620", "card_bg_1": "#0b0e14",
+        "ad_bg_0": "#161e2b", "ad_bg_1": "#0e141e",
+        "border": "#30363d", "border_accent": "#58a6ff",
+        "text_title": "#58a6ff", "text_meta": "#e6edf3",
+        "text_headline": "#f0f6fc", "text_sponsor": "#ffffff",
+        "shield_left": "#161b22", "shield_right": "#0d1117", "shield_border": "#30363d",
+        "btn_bg_0": "#238636", "btn_bg_1": "#2ea043", "btn_text": "#ffffff",
+        "accent": "#58a6ff", "glow": "#2ea043"
+    },
+    "cyberpunk": {
+        "card_bg_0": "#0f051d", "card_bg_1": "#05020a",
+        "ad_bg_0": "#20093b", "ad_bg_1": "#120524",
+        "border": "#f43f5e", "border_accent": "#00f0ff",
+        "text_title": "#00f0ff", "text_meta": "#fde047",
+        "text_headline": "#f43f5e", "text_sponsor": "#00f0ff",
+        "shield_left": "#1f0438", "shield_right": "#0a0114", "shield_border": "#00f0ff",
+        "btn_bg_0": "#ec4899", "btn_bg_1": "#d946ef", "btn_text": "#ffffff",
+        "accent": "#00f0ff", "glow": "#ec4899"
+    },
+    "emerald": {
+        "card_bg_0": "#062319", "card_bg_1": "#02120d",
+        "ad_bg_0": "#0b3b2b", "ad_bg_1": "#06241a",
+        "border": "#10b981", "border_accent": "#34d399",
+        "text_title": "#34d399", "text_meta": "#a7f3d0",
+        "text_headline": "#6ee7b7", "text_sponsor": "#34d399",
+        "shield_left": "#06281d", "shield_right": "#03140e", "shield_border": "#10b981",
+        "btn_bg_0": "#059669", "btn_bg_1": "#10b981", "btn_text": "#ffffff",
+        "accent": "#10b981", "glow": "#10b981"
+    },
+    "light": {
+        "card_bg_0": "#ffffff", "card_bg_1": "#f6f8fa",
+        "ad_bg_0": "#f6f8fa", "ad_bg_1": "#ffffff",
+        "border": "#d0d7de", "border_accent": "#0969da",
+        "text_title": "#0969da", "text_meta": "#24292f",
+        "text_headline": "#1f2328", "text_sponsor": "#0969da",
+        "shield_left": "#f6f8fa", "shield_right": "#ffffff", "shield_border": "#d0d7de",
+        "btn_bg_0": "#2da44e", "btn_bg_1": "#2c974b", "btn_text": "#ffffff",
+        "accent": "#0969da", "glow": "#2da44e"
+    },
+    "linear": {
+        "card_bg_0": "#08090d", "card_bg_1": "#030407",
+        "ad_bg_0": "#13111c", "ad_bg_1": "#0b0a12",
+        "border": "#2e2640", "border_accent": "#a78bfa",
+        "text_title": "#a78bfa", "text_meta": "#e2e8f0",
+        "text_headline": "#f3f4f6", "text_sponsor": "#c084fc",
+        "shield_left": "#100e17", "shield_right": "#07060a", "shield_border": "#7c3aed",
+        "btn_bg_0": "#7c3aed", "btn_bg_1": "#9333ea", "btn_text": "#ffffff",
+        "accent": "#a855f7", "glow": "#a855f7"
+    },
+    "dracula": {
+        "card_bg_0": "#21222c", "card_bg_1": "#282a36",
+        "ad_bg_0": "#282a36", "ad_bg_1": "#1e1f29",
+        "border": "#6272a4", "border_accent": "#bd93f9",
+        "text_title": "#8be9fd", "text_meta": "#f8f8f2",
+        "text_headline": "#f1fa8c", "text_sponsor": "#ff79c6",
+        "shield_left": "#282a36", "shield_right": "#1e1f29", "shield_border": "#bd93f9",
+        "btn_bg_0": "#bd93f9", "btn_bg_1": "#ff79c6", "btn_text": "#282a36",
+        "accent": "#50fa7b", "glow": "#bd93f9"
+    },
+    "nord": {
+        "card_bg_0": "#242933", "card_bg_1": "#2e3440",
+        "ad_bg_0": "#2e3440", "ad_bg_1": "#3b4252",
+        "border": "#4c566a", "border_accent": "#88c0d0",
+        "text_title": "#88c0d0", "text_meta": "#eceff4",
+        "text_headline": "#e5e9f0", "text_sponsor": "#81a1c1",
+        "shield_left": "#2e3440", "shield_right": "#3b4252", "shield_border": "#88c0d0",
+        "btn_bg_0": "#5e81ac", "btn_bg_1": "#81a1c1", "btn_text": "#eceff4",
+        "accent": "#88c0d0", "glow": "#88c0d0"
+    },
+    "monokai": {
+        "card_bg_0": "#1e1f1c", "card_bg_1": "#272822",
+        "ad_bg_0": "#272822", "ad_bg_1": "#1e1f1c",
+        "border": "#75715e", "border_accent": "#66d9ef",
+        "text_title": "#66d9ef", "text_meta": "#f8f8f2",
+        "text_headline": "#a6e22e", "text_sponsor": "#fd971f",
+        "shield_left": "#272822", "shield_right": "#1e1f1c", "shield_border": "#a6e22e",
+        "btn_bg_0": "#f92672", "btn_bg_1": "#e6db74", "btn_text": "#1e1f1c",
+        "accent": "#fd971f", "glow": "#f92672"
+    },
+    "synthwave": {
+        "card_bg_0": "#1a102f", "card_bg_1": "#2b1055",
+        "ad_bg_0": "#2b1055", "ad_bg_1": "#1a102f",
+        "border": "#ff71ce", "border_accent": "#01cdfe",
+        "text_title": "#01cdfe", "text_meta": "#fffb96",
+        "text_headline": "#ff71ce", "text_sponsor": "#05ffa1",
+        "shield_left": "#241442", "shield_right": "#130924", "shield_border": "#ff71ce",
+        "btn_bg_0": "#b967ff", "btn_bg_1": "#ff71ce", "btn_text": "#ffffff",
+        "accent": "#05ffa1", "glow": "#ff71ce"
+    }
+}
+
+# Theme aliases
+THEMES["purple"] = THEMES["linear"]
+THEMES["sunset"] = THEMES["synthwave"]
+THEMES["neon"] = THEMES["cyberpunk"]
+THEMES["brutalist"] = THEMES["linear"]
+
+# Style to Template mappings
+STYLE_TEMPLATES = {
+    "shield": "shield.svg.j2",
+    "linear": "badge_linear.svg.j2",
+    "brutalist": "badge_linear.svg.j2",
+    "neon": "badge_linear.svg.j2",
+    "spotlight": "badge_spotlight.svg.j2",
+    "pill": "badge_spotlight.svg.j2",
+    "dual-pill": "badge_spotlight.svg.j2",
+    "compact": "badge_compact.svg.j2",
+    "micro": "badge_compact.svg.j2",
+    "minimal": "badge_compact.svg.j2",
+    "glass": "badge.svg.j2",
+    "github": "badge.svg.j2",
+    "banner": "badge.svg.j2",
+    "backer": "badge_backer.svg.j2",
+    "supporter": "badge_backer.svg.j2",
+    "sponsor": "badge_backer.svg.j2",
+    "powered": "badge_backer.svg.j2",
+    "partner": "badge_backer.svg.j2",
+    "goal": "badge_goal.svg.j2",
+}
+
+
 def build_badge_svg(
     repo_name: str,
     stars: int,
@@ -191,6 +314,11 @@ def build_badge_svg(
     click_url: str | None = None,
     owner: str | None = None,
     style: str = "banner",
+    theme: str = "dark",
+    marquee: bool = False,
+    sponsor_position: str = "right",
+    hide_stars: bool = False,
+    hide_ci: bool = False,
 ) -> str:
     """
     Compile dynamic SVG badge string matching PROJECT.md interface contract.
@@ -203,12 +331,18 @@ def build_badge_svg(
         ad: Matched Ad model instance, dict, or None
         click_url: Direct click-redirect URL (e.g. '/click/1/1')
         owner: Optional repository owner (e.g. 'pallets')
-        style: Badge layout style ('banner' or 'shield', defaults to 'banner')
+        style: Badge layout style ('banner', 'linear', 'spotlight', 'compact', 'shield')
+        theme: Color theme ('dark', 'cyberpunk', 'emerald', 'light', 'linear', 'dracula', 'nord', 'monokai', 'synthwave')
+        marquee: Enable marquee ticker animation on badge (default False on banner, True on shield)
+        sponsor_position: 'right' (default) or 'left' for layout
+        hide_stars: Whether to hide the star counter
+        hide_ci: Whether to hide CI/CD status pill
 
     Returns:
         Valid XML SVG string.
     """
-    template_name = "shield.svg.j2" if style.lower() == "shield" else "badge.svg.j2"
+    norm_style = style.strip().lower() if style else "banner"
+    template_name = STYLE_TEMPLATES.get(norm_style, "badge.svg.j2")
     template = jinja_env.get_template(template_name)
 
     has_ad = ad is not None
@@ -236,20 +370,31 @@ def build_badge_svg(
 
     effective_click_url = sanitize_url(raw_click_url)
     ci_bg_color, ci_text_color = get_ci_colors(ci_status)
+    palette = THEMES.get(theme.lower(), THEMES["dark"])
+
+    # For marquee animation in shield, if marquee is disabled or text is short, we can flag it
+    should_marquee = marquee is not False and marquee != "0" and marquee != "false"
 
     rendered = template.render(
         repo_name=repo_name,
         formatted_stars=format_stars(stars),
         language=language.strip() if language and language.strip() else None,
         lang_color=get_language_color(language),
-        ci_status=ci_status.strip() if ci_status and ci_status.strip() else None,
+        ci_status=ci_status.strip() if ci_status and ci_status.strip() and not hide_ci else None,
         ci_bg_color=ci_bg_color,
         ci_text_color=ci_text_color,
         has_ad=has_ad,
+        owner=owner,
         sponsor_name=sponsor_name,
         headline=headline,
         cta_text=cta_text,
         click_url=effective_click_url,
+        theme=theme.lower(),
+        palette=palette,
+        marquee=should_marquee,
+        sponsor_position=sponsor_position.lower(),
+        hide_stars=hide_stars,
+        hide_ci=hide_ci,
     )
 
     # Strictly validate XML syntax before returning
@@ -300,6 +445,11 @@ def compile_and_validate_badge(
     click_url: str | None = None,
     owner: str | None = None,
     style: str = "banner",
+    theme: str = "dark",
+    marquee: bool = True,
+    sponsor_position: str = "right",
+    hide_stars: bool = False,
+    hide_ci: bool = False,
 ) -> tuple[str, str]:
     """
     Convenience method compiling badge SVG and computing its SHA-256 ETag.
@@ -316,6 +466,11 @@ def compile_and_validate_badge(
         click_url=click_url,
         owner=owner,
         style=style,
+        theme=theme,
+        marquee=marquee,
+        sponsor_position=sponsor_position,
+        hide_stars=hide_stars,
+        hide_ci=hide_ci,
     )
     etag = compute_svg_etag(svg_content)
     return svg_content, etag
